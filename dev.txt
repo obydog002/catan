@@ -1,0 +1,21 @@
+- Game and GUI
+	- board data structure 						DONE
+	- set reg/ext board types 					DONE
+	- MouseListener 
+	- draw both board types, scaling			DONE
+		- hexes reg								DONE
+		- hexes ext								DONE
+		- edges reg								DONE
+		- edges ext								DONE
+		- vertices reg							DONE
+		- vertices ext							DONE
+		- design tile images, houses, roads		DONE
+	- game logic
+	- interface for agents
+	- options panel and other panels
+- Agents
+	- random agent
+	- simple agent
+	- ...
+	
+	

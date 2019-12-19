@@ -1,5 +1,7 @@
 package catan.game;
 
+import java.util.Random;
+
 public class Board
 {
 	// individual Tile hexes
@@ -14,17 +16,25 @@ public class Board
 	
 	// rows of edges
 	// first edge is the one left of the first vertex of every row in vertices
-	private int edges[][];
+	private Edge edges[][];
 	
-	// dimensions of the overall big hexagon
-	private int dim[];
+	// what the board type is
+	// currently only reguler hexagon and extension board supported
+	// 0 - reguler, 1 - extension
+	private int board_type = -1;
 	
-	public Board(Tile tiles[][], Vertex vertices[][], int edges[][], int dim[])
+	// determines the dimensions of the board
+	private int board_length = -1;
+	
+	static Random rng = new Random();
+	
+	public Board(Tile tiles[][], Vertex vertices[][], Edge edges[][], int board_type, int board_length)
 	{
 		this.tiles = tiles;
 		this.vertices = vertices;
 		this.edges = edges;
-		this.dim = dim;
+		this.board_type = board_type;
+		this.board_length = board_length;
 	}
 	
 	public Board()
@@ -32,39 +42,32 @@ public class Board
 		this.tiles = null;
 		this.vertices = null;
 		this.edges = null;
-		this.dim = null;
 	}
 	
 	// set to a reguler hexagon with length of each side
 	public void set_reg_hex(int length)
 	{
+		board_type = 0;
+		board_length = length;
+		
 		int x = length*2 - 1;
 		
 		tiles = new Tile[x][];
 		
-		int r = 0;
-		for (int i = length; i <= x; i++)
+		tiles[length - 1] = new Tile[x];
+		
+		for (int i = 1; i < length; i++)
 		{
-			tiles[r] = new Tile[i];
-			
-			for (int j = 0; j < i; j++)
-			{
-				tiles[r][j] = new Tile(i, j);
-			}
-			
-			r++;
+			tiles[length - 1 - i] = new Tile[x - i];
+			tiles[length - 1 + i] = new Tile[x - i];
 		}
 		
-		for (int i = x - 1; i >= length; i--)
+		for (int i = 0; i < tiles.length; i++)
 		{
-			tiles[r] = new Tile[i];
-			
-			for (int j = 0; j < i; j++)
+			for (int j = 0; j < tiles[i].length; j++)
 			{
-				tiles[r][j] = new Tile(i, j);
+				tiles[i][j] = new Tile(rng.nextInt(6));
 			}
-			
-			r++;
 		}
 		
 		vertices = new Vertex[4*length][];
@@ -75,7 +78,7 @@ public class Board
 		vertices[2*length] = new Vertex[2*length];
 		vertices[2*length + 1] = new Vertex[2*length - 1];
 		
-		r = 2*length - 2;
+		int r = 2*length - 2;
 		for (int i = 1; i < length; i++)
 		{
 			vertices[2*length - 2*i - 1] = new Vertex[r + 1];
@@ -95,34 +98,101 @@ public class Board
 			}
 		}
 		
-		edges = new int[4*length - 1][];
+		edges = new Edge[4*length - 1][];
 		
-		edges[2*length - 1] = new int[2*length]; // middle row of edges
+		edges[2*length - 1] = new Edge[2*length]; // middle row of edges
 		
-		edges[2*length - 2] = new int[4*length - 2]; // row above
-		edges[2*length] = new int[4*length - 2]; // row below
+		edges[2*length - 2] = new Edge[4*length - 2]; // row above
+		edges[2*length] = new Edge[4*length - 2]; // row below
 		
 		r = 2*length - 2;
 		for (int i = 1; i < length; i++)
 		{
-			edges[2*length - 2*i - 1] = new int[r + 1];
-			edges[2*length - 2*i - 2] = new int[2*r];
+			edges[2*length - 2*i - 1] = new Edge[r + 1];
+			edges[2*length - 2*i - 2] = new Edge[2*r];
 			
-			edges[2*length + 2*i - 1] = new int[r + 1];
-			edges[2*length + 2*i] = new int[2*r];
+			edges[2*length + 2*i - 1] = new Edge[r + 1];
+			edges[2*length + 2*i] = new Edge[2*r];
 			
 			r--;
 		}
 		
-		dim = new int[6];
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < edges.length; i++)
 		{
-			dim[i] = length;
+			for (int j = 0; j < edges[i].length; j++)
+			{
+				edges[i][j] = new Edge();
+			}
 		}
-		
-		
 	}
 
+	// set the board to be a hexagon with 
+	// length, length + 1, length + 1, length, length + 1, length + 1 dimensions
+	public void set_ext_hex(int length)
+	{
+		board_type = 1;
+		board_length = length;
+		
+		int adjust = length - 1;
+		
+		tiles = new Tile[2*adjust + 1][];
+		
+		tiles[adjust] = new Tile[2*adjust];
+		for (int i = 1; i <= adjust; i++)
+		{
+			tiles[adjust - i] = new Tile[2*adjust - i];
+			tiles[adjust + i] = new Tile[2*adjust - i];
+		}
+		
+		for (int i = 0; i < tiles.length; i++)
+		{
+			for (int j = 0; j < tiles[i].length; j++)
+			{
+				tiles[i][j] = new Tile(rng.nextInt(6));
+			}
+		}
+		
+		vertices = new Vertex[4*(adjust + 1)][];
+		
+		int x = 2*(adjust + 1);
+		for (int i = 0; i <= adjust; i++)
+		{
+			vertices[x - 2 - 2*i] = new Vertex[x - 2 - i];
+			vertices[x - 1 - 2*i] = new Vertex[x - 1 - i];
+			vertices[x + 2*i] = new Vertex[x - 1 - i];
+			vertices[x + 1 + 2*i] = new Vertex[x - 2 - i];
+		}
+		
+		for (int i = 0; i < vertices.length; i++)
+		{
+			for (int j = 0; j < vertices[i].length; j++)
+			{
+				vertices[i][j] = new Vertex();
+			}
+		}
+		
+		edges = new Edge[4*(adjust + 1) - 1][];
+		
+		edges[x - 2] = new Edge[4*adjust];
+		edges[x - 1] = new Edge[2*adjust + 1];
+		edges[x] = new Edge[4*adjust];
+		for (int i = 1; i <= adjust; i++)
+		{
+			edges[x - 2 - 2*i] = new Edge[4*adjust - 2*i];
+			edges[x - 1 - 2*i] = new Edge[2*adjust + 1 - i];
+			edges[x - 1 + 2*i] = new Edge[2*adjust + 1 - i];
+			edges[x + 2*i] = new Edge[4*adjust - 2*i];
+		}
+		
+		for (int i = 0; i < edges.length; i++)
+		{
+			for (int j = 0; j < edges[i].length; j++)
+			{
+				edges[i][j] = new Edge();
+			}
+		}
+	}
+	
 	public void print_test()
 	{
 		for (int i = 0; i < tiles.length; i++)
@@ -151,5 +221,30 @@ public class Board
 			}
 			System.out.println();
 		}
+	}
+	
+	public Tile[][] getTiles()
+	{
+		return tiles;
+	}
+	
+	public Vertex[][] getVertices()
+	{
+		return vertices;
+	}
+	
+	public Edge[][] getEdges()
+	{
+		return edges;
+	}
+	
+	public int getType()
+	{
+		return board_type;
+	}
+	
+	public int getLength()
+	{
+		return board_length;
 	}
 }

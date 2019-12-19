@@ -1,4 +1,4 @@
-package game.gui;
+package catan.gui;
 
 import javax.swing.SwingUtilities;
 import javax.swing.JFrame;
@@ -21,8 +21,12 @@ public class CatanMain
 		JFrame frame = new JFrame("catan");
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(500,500);
 		frame.setVisible(true);
 		
+		BoardPanel board = new BoardPanel();
+		
+		frame.add(board);
+		
+		frame.pack();
 	}
 }

@@ -4,7 +4,7 @@ public class Vertex
 {
 	// who this belongs to if there is a building
 	// -1 not owned
-	private int player_belonged;
+	private int player;
 	
 	// what type of structure of this vertex
 	// -1 for nothing, 0 for settlement, 1 for city
@@ -16,13 +16,13 @@ public class Vertex
 	
 	public Vertex()
 	{
-		this.player_belonged = -1;
+		this.player = -1;
 		this.type = -1;
 		this.port = -1;
 	}
 	
 	public String toString()
 	{
-		return "(" + player_belonged + " " + type + " " + port + ")";
+		return "(" + player + " " + type + " " + port + ")";
 	}
 }
