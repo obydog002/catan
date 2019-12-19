@@ -51,6 +51,7 @@ public class BoardPanel extends JPanel
 	// static colors we use
 	private static final Color SEA_BLUE = new Color(220,220,255);
 	private static final Color LIGHT_RED = new Color(255,220,220);
+	private static final Color BEIGE = new Color(255, 253, 208);
 	
 	private static final Color WOOD_TILE_COL = new Color(155,62,0);
 	private static final Color BRICK_TILE_COL = new Color(255,206,208);
@@ -63,15 +64,33 @@ public class BoardPanel extends JPanel
 	private static final File PATH = new File(BoardPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 	
 	// res/tile path
-	private static final String TILE = File.separator + "catan" + File.separator + "res" + File.separator + "tile" + File.separator;
+	private static final String TILE_PATH = File.separator + "catan" + File.separator + "res" + File.separator + "tile" + File.separator;
+	
+	// res/font path
+	private static final String FONT_PATH = File.separator + "catan" + File.separator + "res" + File.separator + "font" + File.separator;
+	
+	// bufferedimages for fonts
+	// first index is value of number (0 - 0, 1 - 1,..., 9 - 9)
+	// second index is color (0 - black, 1 - red)
+	private static final BufferedImage[][] FONT = new BufferedImage[10][2];
+	
+	// load the fonts
+	static
+	{
+		for (int i = 0; i < 10; i++)
+		{
+			FONT[i][0] = load_resource(FONT_PATH + "b" + i + ".png");
+			FONT[i][1] = load_resource(FONT_PATH + "r" + i + ".png");
+		}
+	}
 	
 	// bufferedimages for tiles
-	private static final BufferedImage WOOD_TILE = load_resource(TILE + "wood.png");
-	private static final BufferedImage BRICK_TILE = load_resource(TILE + "brick.png");
-	private static final BufferedImage SHEEP_TILE = load_resource(TILE + "sheep.png");
-	private static final BufferedImage WHEAT_TILE = load_resource(TILE + "wheat.png");
-	private static final BufferedImage ORE_TILE = load_resource(TILE + "ore.png");
-	private static final BufferedImage DESERT_TILE = load_resource(TILE + "desert.png");
+	private static final BufferedImage WOOD_TILE = load_resource(TILE_PATH + "wood.png");
+	private static final BufferedImage BRICK_TILE = load_resource(TILE_PATH + "brick.png");
+	private static final BufferedImage SHEEP_TILE = load_resource(TILE_PATH + "sheep.png");
+	private static final BufferedImage WHEAT_TILE = load_resource(TILE_PATH + "wheat.png");
+	private static final BufferedImage ORE_TILE = load_resource(TILE_PATH + "ore.png");
+	private static final BufferedImage DESERT_TILE = load_resource(TILE_PATH + "desert.png");
 	
 	// load a png file, from PATH/name
 	// name - location of file relative to PATH
@@ -105,7 +124,7 @@ public class BoardPanel extends JPanel
 		Dimension pref = new Dimension(BOARD_WIDTH + 2*BOARD_WIDTH_MARGIN, BOARD_HEIGHT + BOARD_HEIGHT_MARGIN_TOP + BOARD_HEIGHT_MARGIN_BOTTOM);
 		this.setPreferredSize(pref);
 		
-		catan = new Catan();
+		catan = new CatanEngine();
 		
 		int length = 3;
 		int type = 0;
@@ -395,6 +414,9 @@ public class BoardPanel extends JPanel
 	// tile - tile to draw. null value draws a black empty outline
 	public void drawHex(Graphics2D g, int x0, int y0, int x_half_length, int y_half_length, boolean orient, Tile tile)
 	{
+		// do nothing if tile is null ofcourse
+		if (tile == null) return;
+		
 		g.setColor(Color.BLACK);
 		
 		BufferedImage im = null;
@@ -432,7 +454,8 @@ public class BoardPanel extends JPanel
 		}
 		else
 		{
-			g.setColor(Color.RED);
+			// dont draw anything of the hex if the tile is not decided yet
+			return; 
 		}
 			
 		if (orient)
@@ -467,6 +490,59 @@ public class BoardPanel extends JPanel
 			
 			g.fillPolygon(tri_x, tri_y, 3);
 		}
+		
+		int number = tile.getNumber();
+		
+		int radius = (x_half_length < y_half_length) ? x_half_length : y_half_length;
+		radius /= 3;
+		
+		drawToken(g, x0, y0, radius, 5, number, false);
+		
+	}
+	
+	// draws the token with number on it for tiles
+	// will only draw the numbers 2-12.
+	// g - graphics to draw on
+	// x0 - center x coord
+	// y0 - center y coord
+	// r - radius 
+	// t0 - thickness of the border
+	// number - number to draw
+	// robber - whether the robber is present on this tile
+	public void drawToken(Graphics2D g, int x0, int y0, int r, int t0, int number, boolean robber)
+	{
+		g.setColor(BEIGE);
+		g.fillOval(x0 - r, y0 - r, 2*r, 2*r);
+		
+		g.setColor(Color.BLACK);
+		g.setStroke(new BasicStroke(t0));
+		g.drawOval(x0 - r, y0 - r, 2*r, 2*r);
+		
+		int digit_width = (int)(Math.sqrt(2)*r/2);
+		
+		if (number > 9)
+		{
+			// 10s digit
+			int d1 = number / 10;
+			int d0 = number % 10;
+			
+			g.drawImage(FONT[d1][0], x0 - digit_width, y0 - digit_width, digit_width, 2*digit_width, null);
+			g.drawImage(FONT[d0][0], x0, y0 - digit_width, digit_width, 2*digit_width, null);
+		}
+		else
+		{
+			// red numbers
+			if (number == 6 || number == 8)
+			{
+				g.drawImage(FONT[number][1], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
+			}
+			else
+			{
+				g.drawImage(FONT[number][0], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
+			}
+		}
+		
+		
 	}
 	
 	// for drawing the edges (roads)
