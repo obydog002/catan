@@ -1,8 +1,14 @@
 package catan.game;
 
-public class Catan
+// either game engine or game observer
+// essentially the difference is that the game engine simulates dice rolls, handles trades between players,
+// does stealing from robber, validates building costs from resources, dev cards etc..
+// observer means the instance will only show the board, and handle trades for any agents/players that are local 
+// to the engine. The instance can't see what other players have in dev cards for instance, or what they steal
+// with robber
+public abstract class Catan
 {
-	private Board board = null;
+	Board board = null;
 	
 	public Catan()
 	{
@@ -16,7 +22,7 @@ public class Catan
 		else
 			board.set_ext_hex(length);
 		
-		
+		board.test_randomize_all();
 	}
 	
 	public void print_state()
