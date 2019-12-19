@@ -66,7 +66,7 @@ public class Board
 		{
 			for (int j = 0; j < tiles[i].length; j++)
 			{
-				tiles[i][j] = new Tile(rng.nextInt(6));
+				tiles[i][j] = new Tile(rng.nextInt(6),i+2*j);
 			}
 		}
 		
@@ -148,7 +148,7 @@ public class Board
 		{
 			for (int j = 0; j < tiles[i].length; j++)
 			{
-				tiles[i][j] = new Tile(rng.nextInt(6));
+				tiles[i][j] = new Tile(rng.nextInt(6),i+2*j);
 			}
 		}
 		
@@ -220,6 +220,47 @@ public class Board
 				System.out.print(edges[i][j] + " ");
 			}
 			System.out.println();
+		}
+	}
+	
+	// test method for seeing all types of tiles types, numbers, robber etc, houses to debug
+	// shouldn't be used to create a board 
+	// must be called after a board is initialized with the set_board methods
+	public void test_randomize_all()
+	{
+		for (int i = 0; i < tiles.length; i++)
+		{
+			for (int j = 0; j < tiles[i].length; j++)
+			{
+				int res = rng.nextInt(6);
+				int numb = rng.nextInt(11) + 2;
+				boolean robber = rng.nextInt(10) == 0;
+				
+				tiles[i][j].set(res, numb, robber);
+			}
+		}
+		
+		for (int i = 0; i < edges.length; i++)
+		{
+			for (int j = 0; j < edges[i].length; j++)
+			{
+				int player = rng.nextInt(4);
+				int road = rng.nextInt(3) == 0 ? 0 : -1;
+				
+				edges[i][j].set(player, road);
+			}
+		}
+		
+		for (int i = 0; i < vertices.length; i++)
+		{
+			for (int j = 0; j < vertices[i].length; j++)
+			{
+				int player = rng.nextInt(4);
+				int type = rng.nextInt(3) - 1;
+				int port = rng.nextInt(10) == 0 ? 0 : -1;
+				
+				vertices[i][j].set(player, type, port);
+			}
 		}
 	}
 	
