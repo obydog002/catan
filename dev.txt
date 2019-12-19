@@ -1,17 +1,37 @@
+Started: 19/11/2019
+
 - Game and GUI
-	- board data structure 						DONE
-	- set reg/ext board types 					DONE
+	- board data structure 											DONE 16/12/2019
+	- set reg/ext board types 										DONE 17/12/2019
 	- MouseListener 
-	- draw both board types, scaling			DONE
-		- hexes reg								DONE
-		- hexes ext								DONE
-		- edges reg								DONE
-		- edges ext								DONE
-		- vertices reg							DONE
-		- vertices ext							DONE
-		- design tile images, houses, roads		DONE
+	- draw both board types, scaling, rotate						DONE 19/12/2019
+		- hexes reg													DONE 17/12/2019
+		- hexes ext													DONE 17/12/2019
+		- edges reg													DONE 17/12/2019
+		- edges ext													DONE 19/12/2019
+		- vertices reg												DONE 19/12/2019
+		- vertices ext												DONE 19/12/2019
+	- draw game stuff
+		- design 
+			- tile images											DONE 19/12/2019
+			- houses/cities				
+			- roads
+		- tokens 
 	- game logic
+		- store initial game configs for reg, ext boards
+		- special building option
+		- validate settlement/city/road building
+		- omnipresent mode
+			- dice rolls
+			- distribute resources
+			- building options
+			- request_trade
+			- accept_trade
+			- validate building/trading
+		- non-omnipresent mode
+			- observer interface/trades building
 	- interface for agents
+		- 
 	- options panel and other panels
 - Agents
 	- random agent
