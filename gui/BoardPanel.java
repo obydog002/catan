@@ -63,7 +63,7 @@ public class BoardPanel extends JPanel
 	private static final File PATH = new File(BoardPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 	
 	// res/tile path
-	private static final String TILE = File.separator + "res" + File.separator + "tile" + File.separator;
+	private static final String TILE = File.separator + "catan" + File.separator + "res" + File.separator + "tile" + File.separator;
 	
 	// bufferedimages for tiles
 	private static final BufferedImage WOOD_TILE = load_resource(TILE + "wood.png");
