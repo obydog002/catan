@@ -494,9 +494,9 @@ public class BoardPanel extends JPanel
 		int number = tile.getNumber();
 		
 		int radius = (x_half_length < y_half_length) ? x_half_length : y_half_length;
-		radius /= 3;
+		radius  = 2*radius/5;
 		
-		drawToken(g, x0, y0, radius, 5, number, false);
+		drawToken(g, x0, y0, radius, 5, number, tile.getRobber());
 		
 	}
 	
@@ -511,37 +511,44 @@ public class BoardPanel extends JPanel
 	// robber - whether the robber is present on this tile
 	public void drawToken(Graphics2D g, int x0, int y0, int r, int t0, int number, boolean robber)
 	{
-		g.setColor(BEIGE);
+		if (robber)
+			g.setColor(Color.GRAY);
+		else
+			g.setColor(BEIGE);
+		
 		g.fillOval(x0 - r, y0 - r, 2*r, 2*r);
 		
 		g.setColor(Color.BLACK);
 		g.setStroke(new BasicStroke(t0));
 		g.drawOval(x0 - r, y0 - r, 2*r, 2*r);
 		
-		int digit_width = (int)(Math.sqrt(2)*r/2);
-		
-		if (number > 9)
+		// if the robber is present we don't need to draw anything
+		if (!robber)
 		{
-			// 10s digit
-			int d1 = number / 10;
-			int d0 = number % 10;
+			int digit_width = (int)(Math.sqrt(2)*r/2);
 			
-			g.drawImage(FONT[d1][0], x0 - digit_width, y0 - digit_width, digit_width, 2*digit_width, null);
-			g.drawImage(FONT[d0][0], x0, y0 - digit_width, digit_width, 2*digit_width, null);
-		}
-		else
-		{
-			// red numbers
-			if (number == 6 || number == 8)
+			if (number > 9)
 			{
-				g.drawImage(FONT[number][1], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
+				// 10s digit
+				int d1 = number / 10;
+				int d0 = number % 10;
+				
+				g.drawImage(FONT[d1][0], x0 - digit_width, y0 - digit_width, digit_width, 2*digit_width, null);
+				g.drawImage(FONT[d0][0], x0, y0 - digit_width, digit_width, 2*digit_width, null);
 			}
 			else
 			{
-				g.drawImage(FONT[number][0], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
+				// red numbers
+				if (number == 6 || number == 8)
+				{
+					g.drawImage(FONT[number][1], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
+				}
+				else
+				{
+					g.drawImage(FONT[number][0], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
+				}
 			}
 		}
-		
 		
 	}
 	
