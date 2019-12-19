@@ -14,6 +14,12 @@ public class Edge
 		this.player = -1;
 		this.type = -1;
 	}
+
+	public void set(int player, int type)
+	{
+		this.player = player;
+		this.type = type;
+	}
 	
 	public String toString()
 	{

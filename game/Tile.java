@@ -33,11 +33,29 @@ public class Tile
 	
 	public String toString()
 	{
-		return resource + "";
+		return resource + " " + number;
+	}
+	
+	// set resource type, number, robber
+	public void set(int resource, int number, boolean robber)
+	{
+		this.resource = resource;
+		this.number = number;
+		this.robber = robber;
 	}
 	
 	public int getResource()
 	{
 		return resource;
+	}
+	
+	public int getNumber()
+	{
+		return number;
+	}
+	
+	public boolean getRobber()
+	{
+		return robber;
 	}
 }

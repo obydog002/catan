@@ -21,6 +21,13 @@ public class Vertex
 		this.port = -1;
 	}
 	
+	public void set(int player, int type, int port)
+	{
+		this.player = player;
+		this.type = type;
+		this.port = port;
+	}
+	
 	public String toString()
 	{
 		return "(" + player + " " + type + " " + port + ")";
