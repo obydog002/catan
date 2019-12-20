@@ -25,4 +25,14 @@ public class Edge
 	{
 		return "[" + player + "," + type + "]";
 	}
+	
+	public int get_player()
+	{
+		return player;
+	}
+	
+	public int get_type()
+	{
+		return type;
+	}
 }
