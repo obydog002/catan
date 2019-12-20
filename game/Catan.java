@@ -1,5 +1,7 @@
 package catan.game;
 
+import java.awt.Color;
+
 // either game engine or game observer
 // essentially the difference is that the game engine simulates dice rolls, handles trades between players,
 // does stealing from robber, validates building costs from resources, dev cards etc..
@@ -10,9 +12,12 @@ public abstract class Catan
 {
 	Board board = null;
 	
+	private Color[] player_colors;
+	
 	public Catan()
 	{
 		this.board = new Board();
+		player_colors = new Color[4];
 	}
 	
 	public void setup(int length, int type)
@@ -23,6 +28,11 @@ public abstract class Catan
 			board.set_ext_hex(length);
 		
 		board.test_randomize_all();
+		
+		player_colors[0] = Color.WHITE;
+		player_colors[1] = Color.RED;
+		player_colors[2] = Color.BLUE;
+		player_colors[3] = Color.ORANGE;
 	}
 	
 	public void print_state()
@@ -34,6 +44,11 @@ public abstract class Catan
 	public Board getBoard()
 	{
 		return board;
+	}
+	
+	public Color[] get_player_colors()
+	{
+		return player_colors;
 	}
 	
 	/*public static void main(String[] arg)
