@@ -12,11 +12,12 @@ Started: 19/11/2019
 		- vertices reg												DONE 19/12/2019
 		- vertices ext												DONE 19/12/2019
 	- draw game stuff
-		- design 
+		- design 													DONE 20/19/2019
 			- tile images											DONE 19/12/2019
-			- houses/cities				
-			- roads
-		- tokens 
+			- houses/cities											DONE 20/12/2019
+			- roads													DONE 20/12/2019
+		- tokens 													DONE 19/12/2019
+		- ports
 	- game logic
 		- store initial game configs for reg, ext boards
 		- special building option
