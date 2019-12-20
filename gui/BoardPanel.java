@@ -48,10 +48,13 @@ public class BoardPanel extends JPanel
 	// handles mouse clicks
 	private static InputHandler input;
 	
+	private static Color player_col[];
+	
 	// static colors we use
 	private static final Color SEA_BLUE = new Color(220,220,255);
 	private static final Color LIGHT_RED = new Color(255,220,220);
 	private static final Color BEIGE = new Color(255, 253, 208);
+	private static final Color DARK_GREY = new Color(25,25,25);
 	
 	private static final Color WOOD_TILE_COL = new Color(155,62,0);
 	private static final Color BRICK_TILE_COL = new Color(255,206,208);
@@ -72,7 +75,7 @@ public class BoardPanel extends JPanel
 	// bufferedimages for fonts
 	// first index is value of number (0 - 0, 1 - 1,..., 9 - 9)
 	// second index is color (0 - black, 1 - red)
-	private static final BufferedImage[][] FONT = new BufferedImage[10][2];
+	private static final BufferedImage FONT[][] = new BufferedImage[10][2];
 	
 	// load the fonts
 	static
@@ -129,6 +132,8 @@ public class BoardPanel extends JPanel
 		int length = 3;
 		int type = 0;
 		catan.setup(length, type);
+		
+		player_col = catan.get_player_colors();
 		
 		input = new InputHandler(this);
 	}
@@ -205,7 +210,17 @@ public class BoardPanel extends JPanel
 				y_half_length = (int)(height/(2*len + 2));
 			}
 		}
-			
+		
+		// set edge width
+		edge_width = (x_half_length < y_half_length) ? x_half_length/7 : y_half_length/7;
+		if (edge_width < 1) 
+			edge_width = 1;
+		
+		// set house/city width
+		house_width = (x_half_length < y_half_length) ? 2*x_half_length/11 : 2*y_half_length/11;
+		if (house_width < 2)
+			edge_width = 2;
+		
 		// margins from edge
 		int x_margin = BOARD_WIDTH_MARGIN;
 		int y_margin = BOARD_HEIGHT_MARGIN_TOP;
@@ -404,6 +419,12 @@ public class BoardPanel extends JPanel
 		}
 	}
 	
+	// how wide the edges/roads are
+	private static int edge_width = 1;
+	
+	// how wide houses/cities are
+	private static int house_width = 1;
+	
 	// draw a singular tile
 	// g - graphics object to draw on
 	// x0 - x coordinate of middle of the hex
@@ -416,8 +437,6 @@ public class BoardPanel extends JPanel
 	{
 		// do nothing if tile is null ofcourse
 		if (tile == null) return;
-		
-		g.setColor(Color.BLACK);
 		
 		BufferedImage im = null;
 			
@@ -498,6 +517,29 @@ public class BoardPanel extends JPanel
 		
 		drawToken(g, x0, y0, radius, 5, number, tile.getRobber());
 		
+		// draw black border
+		g.setColor(Color.BLACK);
+		g.setStroke(new BasicStroke(edge_width));
+		
+		if (orient)
+		{
+			g.drawLine(x0 - x_half_length/2, y0 - y_half_length, x0 + x_half_length/2, y0 - y_half_length);
+			g.drawLine(x0 + x_half_length/2, y0 - y_half_length, x0 + x_half_length, y0);
+			g.drawLine(x0 + x_half_length, y0, x0 + x_half_length/2, y0 + y_half_length);
+			g.drawLine(x0 + x_half_length/2, y0 + y_half_length, x0 - x_half_length/2, y0 + y_half_length);
+			g.drawLine(x0 - x_half_length/2, y0 + y_half_length, x0 - x_half_length, y0);
+			g.drawLine(x0 - x_half_length, y0, x0 - x_half_length/2, y0 - y_half_length);
+		}
+		else
+		{
+			g.drawLine(x0, y0 - y_half_length, x0 + x_half_length, y0 - y_half_length/2);
+			g.drawLine(x0 + x_half_length, y0 - y_half_length/2, x0 + x_half_length, y0 + y_half_length/2);
+			g.drawLine(x0 + x_half_length, y0 + y_half_length/2, x0, y0 + y_half_length);
+			g.drawLine(x0, y0 + y_half_length, x0 - x_half_length, y0 + y_half_length/2);
+			g.drawLine(x0 - x_half_length, y0 + y_half_length/2, x0 - x_half_length, y0 - y_half_length/2);
+			g.drawLine(x0 - x_half_length, y0 - y_half_length/2, x0, y0 - y_half_length);
+		}
+		
 	}
 	
 	// draws the token with number on it for tiles
@@ -561,29 +603,94 @@ public class BoardPanel extends JPanel
 	// edge - object containing road info
 	public void drawEdge(Graphics2D g, int x0, int y0, int x1, int y1, Edge edge)
 	{
-		g.setColor(Color.BLACK);
-		g.setStroke(new BasicStroke(5));
+		int player = edge.get_player();
+		int type = edge.get_type();
 		
-		g.drawLine(x0,y0,x1,y1);
+		// draw the road
+		if (player > -1 && type > -1)
+		{
+			g.setColor(player_col[player]);
+			
+			// make it a little thicker
+			g.setStroke(new BasicStroke(edge_width + 2));
+			g.drawLine(x0,y0,x1,y1);
+		}
 		
-		/*int r = rng.nextInt(4);
-		if (r == 0) g.drawLine(x0, y0, x0 + 2, y0 - 10);
-		else if (r == 1) g.drawLine(x0, y0, x0 + 10, y0 - 2);
-		else if (r == 2) g.drawLine(x0, y0, x0 - 2, y0 + 10);
-		else if (r == 3) g.drawLine(x0, y0, x0 - 10, y0 + 2);*/
 	}
 	
-	// drawing houses
+	// drawing houses/cities
 	// g - graphics to draw on
 	// x0 - x coord of vertex
 	// y0 - y coord of vertex
 	// vertex - house, city, port info
 	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex)
-	{
-		g.setColor(Color.BLACK);
-		g.fillRect(x0 - 5, y0 - 5, 10, 10);
+	{	
+		int player = vertex.get_player();
+		int type = vertex.get_type();
+		int port = vertex.get_port();
 		
-		// what to do here
+		if (player > -1)
+		{
+			if (type == 0)
+			{
+				drawHouse(g, x0, y0, house_width, player_col[player]);
+			}
+			else if (type == 1)
+			{
+				drawCity(g, x0, y0, house_width, player_col[player]);
+			}
+		}
+		
+	}
+	
+	// draw a house with color c, centered at x0, y0, width w
+	public void drawHouse(Graphics2D g, int x0, int y0, int width, Color c)
+	{
+		g.setColor(c);
+		
+		g.fillRect(x0 - width, y0 - width, 2*width, 2*width);
+		
+		int[] tri_x = {x0 - width, x0, x0 + width};
+		int[] tri_y = {y0 - width, y0 - 2*width, y0 - width};
+		
+		g.fillPolygon(tri_x, tri_y, 3);
+		
+		g.setColor(DARK_GREY);
+		g.setStroke(new BasicStroke(2*width/5));
+		
+		g.drawLine(x0 - width, y0 - width, x0, y0 - 2*width);
+		g.drawLine(x0, y0 - 2*width, x0 + width, y0 - width);
+		g.drawLine(x0 + width, y0 - width, x0 + width, y0 + width);
+		g.drawLine(x0 + width, y0 + width, x0 - width, y0 + width);
+		g.drawLine(x0 - width, y0 + width, x0 - width, y0 - width);
+	}
+	
+	// draw city with color c, centered x0, y0, width w
+	public void drawCity(Graphics2D g, int x0, int y0, int width, Color c)
+	{
+		g.setColor(c);
+		
+		x0 += 2*width/3;
+		y0 -= 2*width/5;
+		
+		g.fillRect(x0 - 2*width, y0 - width, 3*width, 2*width);
+		g.fillRect(x0 - 2*width, y0 - 2*width, 2*width, width);
+		
+		int[] tri_x = {x0 - 2*width, x0 - width, x0};
+		int[] tri_y = {y0 - 2*width, y0 - 3*width, y0 - 2*width};
+		
+		g.fillPolygon(tri_x, tri_y, 3);
+		
+		g.setColor(DARK_GREY);
+		g.setStroke(new BasicStroke(2*width/5));
+		
+		g.drawLine(x0 - 2*width, y0 - 2*width, x0 - width, y0 - 3*width);
+		g.drawLine(x0 - width, y0 - 3*width, x0, y0 - 2*width);
+		g.drawLine(x0, y0 - 2*width, x0, y0 - width);
+		g.drawLine(x0, y0 - width, x0 + width, y0 - width);
+		g.drawLine(x0 + width, y0 - width, x0 + width, y0 + width);
+		g.drawLine(x0 + width, y0 + width, x0 - 2*width, y0 + width);
+		g.drawLine(x0 - 2*width, y0 + width, x0 - 2*width, y0 - 2*width);
 	}
 	
 	// clears entire screen to specific color
