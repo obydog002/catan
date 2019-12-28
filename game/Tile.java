@@ -6,7 +6,7 @@ public class Tile
 	// -1 denotes havent set yet
 	private int resource;
 	
-	// what dice role on this tile or 0 if no number
+	// what dice role on this tile or -1 if blank token(desert)
 	private int number;
 	
 	// if robber on this tile
@@ -44,18 +44,23 @@ public class Tile
 		this.robber = robber;
 	}
 	
-	public int getResource()
+	public int get_resource()
 	{
 		return resource;
 	}
 	
-	public int getNumber()
+	public int get_number()
 	{
 		return number;
 	}
 	
-	public boolean getRobber()
+	public boolean get_robber()
 	{
 		return robber;
+	}
+	
+	public void set_robber(boolean robber)
+	{
+		this.robber = robber;
 	}
 }
