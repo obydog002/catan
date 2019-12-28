@@ -129,8 +129,8 @@ public class BoardPanel extends JPanel
 		
 		catan = new CatanEngine();
 		
-		int length = 3;
-		int type = 0;
+		int length = 4;
+		int type = 1;
 		catan.setup(length, type);
 		
 		player_col = catan.get_player_colors();
@@ -141,6 +141,8 @@ public class BoardPanel extends JPanel
 	public void toggleRotate()
 	{
 		rotate = !rotate;
+		
+		//catan.reset_board();
 		
 		repaint();
 	}
@@ -179,14 +181,14 @@ public class BoardPanel extends JPanel
 		else
 			clear(g, SEA_BLUE);
 		
-		int len = board.getLength();
+		int len = board.get_length();
 		
 		int x_half_length;
 		int y_half_length;
 		
 		if (rotate)
 		{
-			if (board.getType() == 1)
+			if (board.get_type() == 1)
 			{
 				x_half_length = (int)(width/(3*len - 1));
 				y_half_length = (int)(height/(3*len));
@@ -199,7 +201,7 @@ public class BoardPanel extends JPanel
 		}
 		else
 		{
-			if (board.getType() == 1)
+			if (board.get_type() == 1)
 			{
 				x_half_length = (int)(width/(3*len));
 				y_half_length = (int)(height/(3*len - 1));
@@ -225,9 +227,9 @@ public class BoardPanel extends JPanel
 		int x_margin = BOARD_WIDTH_MARGIN;
 		int y_margin = BOARD_HEIGHT_MARGIN_TOP;
 			
-		Tile[][] tiles = board.getTiles();
-		Edge[][] edges = board.getEdges();
-		Vertex[][] vertices = board.getVertices();
+		Tile[][] tiles = board.get_tiles();
+		Edge[][] edges = board.get_edges();
+		Vertex[][] vertices = board.get_vertices();
 		
 		// to control where edges and vertices go
 		Point[][] bounds = new Point[vertices.length][];
@@ -440,7 +442,7 @@ public class BoardPanel extends JPanel
 		
 		BufferedImage im = null;
 			
-		int res = tile.getResource();
+		int res = tile.get_resource();
 		if (res == 0) 
 		{
 			g.setColor(WOOD_TILE_COL);
@@ -510,12 +512,12 @@ public class BoardPanel extends JPanel
 			g.fillPolygon(tri_x, tri_y, 3);
 		}
 		
-		int number = tile.getNumber();
+		int number = tile.get_number();
 		
 		int radius = (x_half_length < y_half_length) ? x_half_length : y_half_length;
 		radius  = 2*radius/5;
 		
-		drawToken(g, x0, y0, radius, 5, number, tile.getRobber());
+		drawToken(g, x0, y0, radius, 5, number, tile.get_robber());
 		
 		// draw black border
 		g.setColor(Color.BLACK);
@@ -565,7 +567,7 @@ public class BoardPanel extends JPanel
 		g.drawOval(x0 - r, y0 - r, 2*r, 2*r);
 		
 		// if the robber is present we don't need to draw anything
-		if (!robber)
+		if (!robber && number != -1)
 		{
 			int digit_width = (int)(Math.sqrt(2)*r/2);
 			
