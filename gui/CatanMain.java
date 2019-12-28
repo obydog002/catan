@@ -1,7 +1,7 @@
 package catan.gui;
 
-import javax.swing.SwingUtilities;
-import javax.swing.JFrame;
+import java.awt.*;
+import javax.swing.*;
 
 public class CatanMain
 {
@@ -23,9 +23,13 @@ public class CatanMain
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 		
-		BoardPanel board = new BoardPanel();
+		OptionsPanel options = new OptionsPanel();
 		
-		frame.add(board);
+		frame.add(options);
+		
+		/*BoardPanel board = new BoardPanel();
+		
+		frame.add(board);*/
 		
 		frame.pack();
 	}
