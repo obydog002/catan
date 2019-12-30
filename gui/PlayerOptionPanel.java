@@ -12,7 +12,6 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 {
 	private Random rng;
 	
-	// type of player
 	private JComboBox type;
 	
 	// player types the player can choose
@@ -37,15 +36,10 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 	
 	private int starting_number = -1;
 	
-	private static PlayerInfo player_info[];
-	private static boolean already_init = false;
 	private static int player_amount = -1;
 	
 	public PlayerOptionPanel(int player_num, int initial_color, boolean team_enabled, boolean starting_enabled)
 	{
-		int index = player_num - 1;
-		player_info[index] = new PlayerInfo("Human", "Human " + player_num, initial_color);
-		
 		rng = new Random();
 		
 		this.player_num = player_num;
@@ -69,20 +63,22 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 		
 		team = new JTextField();
 		team.setEditable(team_enabled);
+		team.setActionCommand("change_team");
+		team.addActionListener(this);
 		if (team_enabled)
 		{
 			this.team_number = player_num;
 			team.setText(this.team_number + "");
-			player_info[index].set_team(player_num);
 		}
 
 		starting = new JTextField();
 		starting.setEditable(starting_enabled);
+		starting.setActionCommand("change_pos");
+		starting.addActionListener(this);
 		if (starting_enabled)
 		{
 			this.starting_number = player_num;
 			starting.setText(this.starting_number + "");
-			player_info[index].set_pos(player_num);
 		}
 		
 		this.setLayout(new GridLayout(1,0));
@@ -95,25 +91,33 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 		this.add(starting);
 	}
 	
-	// to initialize the static variable players info
-	// so we can keep track of player infos
-	public static void init_infos(int number)
+	public String get_type()
 	{
-		if (already_init) 
-			return;
-		else
-		{
-			player_info = new PlayerInfo[number];
-			player_amount = number;
-		}
+		return (String)type.getSelectedItem();
 	}
 	
-	public static PlayerInfo[] get_infos()
+	public String get_name()
 	{
-		return player_info;
+		return name.getText();
 	}
 	
-	// my own method because Integer.decode is not good
+	// returns hex 
+	public int get_color()
+	{
+		return color_box.get_hex();
+	}
+	
+	public int get_team()
+	{
+		return this.team_number;
+	}
+	
+	public int get_pos()
+	{
+		return this.starting_number;
+	}
+	
+	// my own method because Integer.decode is not good for this it seems
 	// throws an Exception if it can't be parsed
 	public int parse_hex(String hex) throws Exception
 	{
@@ -172,13 +176,10 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 		{
 			String type_str = (String)type.getSelectedItem();
 			name.setText(type_str + " " + player_num);
-			player_info[player_num - 1].set_type(type_str);
-			player_info[player_num - 1].set_name(type_str + " " + player_num);
 		}
 		else if (act == "change_name")
 		{
 			String name_str = name.getText();
-			player_info[player_num - 1].set_name(name_str);
 		}
 		else if (act == "change_color")
 		{
@@ -195,7 +196,34 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 			}
 			
 			color_box.set_color(hex);
-			player_info[player_num - 1].set_color(hex);
+		}
+		else if (act == "change_team")
+		{
+			try
+			{
+				int team_num = Integer.parseInt(team.getText());
+				team_number = team_num;
+			}
+			catch (Exception exc)
+			{
+				JOptionPane.showMessageDialog(this, "Team number must be a numeric value.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+				team.setText(player_num + "");
+				team_number = player_num;
+			}
+		}
+		else if (act == "change_pos")
+		{
+			try
+			{
+				int start_pos = Integer.parseInt(starting.getText());
+				starting_number = start_pos;
+			}
+			catch (Exception exc)
+			{
+				JOptionPane.showMessageDialog(this, "Starting position must be a numeric value between 1 and " + player_amount + " inclusive.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+				team.setText(player_num + "");
+				starting_number = player_num;
+			}
 		}
 	}
 }
