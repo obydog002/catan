@@ -21,6 +21,9 @@ public class OptionsPanel extends JPanel implements ActionListener
 	
 	private JPanel options[];
 	
+	// parent frame
+	private JFrame frame;
+	
 	private JPanel player_scroll_header;
 	private JTextField type_header;
 	private JTextField name_header;
@@ -31,6 +34,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 	
 	private JScrollPane player_scroll_pane;
 	private JPanel player_select_panel;
+	private PlayerOptionPanel player_options_array[];
 	
 	private JRadioButton engine;
 	private JRadioButton observer;
@@ -66,12 +70,13 @@ public class OptionsPanel extends JPanel implements ActionListener
 	
 	private int players_amount = -1;
 	
-	public OptionsPanel()
+	public OptionsPanel(JFrame frame)
 	{
-		super();
+		this.frame = frame;
 		
 		rng = new Random();
 		
+		this.setPreferredSize(new Dimension(700, 400));
 		setLayout(new GridLayout(1,0));
 		
 		options = new JPanel[3];
@@ -349,7 +354,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 				
 				player_select_panel.add(player_scroll_header);
 				
-				PlayerOptionPanel.init_infos(players_amount);
+				player_options_array = new PlayerOptionPanel[players_amount];
 				
 				for (int i = 0; i < players_amount; i++)
 				{
@@ -360,8 +365,8 @@ public class OptionsPanel extends JPanel implements ActionListener
 					else
 						initial_color = rng.nextInt(POWER2_24) + 0xFF000000;
 					
-					PlayerOptionPanel player_option = new PlayerOptionPanel(i + 1, initial_color, team_enabled, starting_enabled);
-					player_select_panel.add(player_option);
+					player_options_array[i] = new PlayerOptionPanel(i + 1, initial_color, team_enabled, starting_enabled);
+					player_select_panel.add(player_options_array[i]);
 				}
 				
 				player_scroll_pane = new JScrollPane(player_select_panel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -378,13 +383,103 @@ public class OptionsPanel extends JPanel implements ActionListener
 			}
 		}
 		else if (act == "submit2")
-		{
-			PlayerInfo infos[] = PlayerOptionPanel.get_infos();
-			for (int i = 0; i < infos.length; i++)
+		{	
+			boolean special_build_enabled = false;
+			boolean team_enabled = false;
+			boolean starting_enabled = false;
+
+			if (game_mode == 1) // 6 player catan
 			{
-				System.out.println(infos[i]);
+				special_build_enabled = true;
+			}
+			else if (game_mode > 1) // variable type games
+			{
+				special_build_enabled = special_build.isSelected();
+				team_enabled = team.isSelected();
+				starting_enabled = starting.isSelected();
+			}
+			
+			boolean ok = true;
+			if (starting_enabled)
+			{
+				// validate starting positions
+				
+				int len = player_options_array.length;
+				boolean pos_seen[] = new boolean[len];
+				for (int i = 0; i < len && ok; i++)
+				{
+					int pos = player_options_array[i].get_pos();
+					
+					if (pos < 1 || pos > len)
+					{
+						ok = false;
+					}
+					else if (pos_seen[pos - 1]) // seen already
+					{
+						ok = false;
+					}
+					else
+					{
+						pos_seen[pos - 1] = true;
+					}
+					
+				}
+			}
+			
+			if (ok)
+			{
+				String types[] = new String[players_amount];
+				String names[] = new String[players_amount];
+				int colors[] = new int[players_amount];
+				int teams[] = new int[players_amount];
+				int poses[] = new int[players_amount];
+				
+				for (int i = 0; i < players_amount; i++)
+				{
+					types[i] = player_options_array[i].get_type();
+					names[i] = player_options_array[i].get_name();
+					colors[i] = player_options_array[i].get_color();
+					teams[i] = player_options_array[i].get_team();
+					poses[i] = player_options_array[i].get_pos();
+				}
+				
+				create_game_panels(engine_mode, game_mode, board_size, players_amount, special_build_enabled, team_enabled, starting_enabled, types, names, colors, teams, poses);
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(this, "Starting positions must be from 1 to " + player_options_array.length + " and may not have repeats.", "Validation Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
+	}
+	
+	// pass player data to board panels, and cause parent frame to draw board
+	// engine_mode - engine or observer
+	// game_mode - what type of game it is (0 - 4 player catan, 1 - extension, 2 - variable normal, 3 - variable ext)
+	// board_size - size of board
+	// players_amount - how many players are there
+	// special_building_enabled - whether there is special building enabled
+	// team_enabled - whether there are teams
+	// starting_enabled - whether the players have decided starting order before hand
+	// types - player types array
+	// names - player name array
+	// colors - player colors array
+	// teams - player team number
+	// poses - player starting order
+	public void create_game_panels(int engine_mode, int game_mode, int board_size, int players_amount, boolean special_building_enabled, boolean team_enabled, boolean starting_enabled, String[] types, String[] names, int[] colors, int[] teams, int[] poses)
+	{
+		removeAll();
+		
+		frame.getContentPane().removeAll();
+		
+		BoardPanel board = new BoardPanel();
+		
+		frame.setVisible(false);
+		frame.add(board);
+		
+		frame.revalidate();
+		frame.pack();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
 	}
 	
 	// takes the input and checks:
