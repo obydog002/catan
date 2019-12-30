@@ -1,5 +1,10 @@
 Started: 19/11/2019
+projected finish: 28/1/2019
 
+- General 
+	- rework/clean up gui
+	- consolidate random instances to static in CatanMain
+	- replace board data structure with graph based implementation
 - GUI
 	- board data structure 											DONE 16/12/2019
 	- set reg/ext board types 										DONE 17/12/2019
@@ -21,24 +26,26 @@ Started: 19/11/2019
 	- options panel and other panels
 		- options													
 		- player options
+			- better color picker
+			- better team/starting position selection
+		- start screen
 - Game
 	- game logic
 		- store initial game configs for reg, ext boards
 		- special building option
 		- validate settlement/city/road building
-		- omnipresent mode
+		- omnipresent mode (Engine)
 			- dice rolls
 			- distribute resources
 			- building options
 			- request_trade
 			- accept_trade
 			- validate building/trading
-		- non-omnipresent mode
-			- observer interface/trades building
+		- non-omnipresent mode (Observer)
+			- observer interface/trades/building
 	- interface for agents
 - Agents
 	- random agent
 	- simple agent
 	- ...
-	
 	
