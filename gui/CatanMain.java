@@ -11,26 +11,22 @@ public class CatanMain
 		{
 			public void run()
 			{
-				createAndShowGUI();
+				create_and_show_GUI();
 			}
 		});
 	}
 	
-	public static void createAndShowGUI()
+	public static void create_and_show_GUI()
 	{
 		JFrame frame = new JFrame("catan");
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
 		
-		OptionsPanel options = new OptionsPanel();
-		
+		OptionsPanel options = new OptionsPanel(frame);
 		frame.add(options);
 		
-		/*BoardPanel board = new BoardPanel();
-		
-		frame.add(board);*/
-		
 		frame.pack();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
 	}
 }
