@@ -60,19 +60,12 @@ public class OptionsPanel extends JPanel implements ActionListener
 	
 	private JButton submit;
 	
-	// 0 - engine, 1 - observer
-	private int engine_mode = -1;
-	
-	// 0 - 4 player catan, 1 - 6 player catan, 2 - variable normal, 3 - variable extension
-	private int game_mode = -1;
-	
-	private int board_size = -1;
-	
-	private int players_amount = -1;
+	private GameData game_data;
 	
 	public OptionsPanel(JFrame frame)
 	{
 		this.frame = frame;
+		this.game_data = new GameData();
 		
 		rng = new Random();
 		
@@ -172,7 +165,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 		
 		if (act == "engine")
 		{
-			engine_mode = 0;
+			game_data.engine_mode = 0;
 			
 			options[1].removeAll();
 			options[2].removeAll();
@@ -197,7 +190,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 		}
 		else if (act == "observer")
 		{
-			engine_mode = 1;
+			game_data.engine_mode = 1;
 			
 			options[1].removeAll();
 			options[2].removeAll();
@@ -218,13 +211,13 @@ public class OptionsPanel extends JPanel implements ActionListener
 			{
 				players_input.setText("4");
 				size_input.setText("3");
-				game_mode = 0;
+				game_data.game_mode = 0;
 			}
 			else
 			{
 				players_input.setText("6");
 				size_input.setText("4");
-				game_mode = 1;
+				game_data.game_mode = 1;
 			}
 			
 			options[2].removeAll();
@@ -241,13 +234,13 @@ public class OptionsPanel extends JPanel implements ActionListener
 			{
 				players_input.setText("4");
 				size_input.setText("3");
-				game_mode = 2;
+				game_data.game_mode = 2;
 			}
 			else 
 			{
 				players_input.setText("6");
 				size_input.setText("4");
-				game_mode = 3;
+				game_data.game_mode = 3;
 			}
 			
 			options[2].removeAll();
@@ -274,12 +267,12 @@ public class OptionsPanel extends JPanel implements ActionListener
 			int size_lower = 1;
 			int size_upper = 1000000;
 			
-			if (game_mode == 0)
+			if (game_data.game_mode == 0)
 			{
 				player_upper = 4;
 				size_str = "3";
 			}
-			else if (game_mode == 1)
+			else if (game_data.game_mode == 1)
 			{
 				player_upper = 6;
 				size_str = "4";
@@ -336,27 +329,27 @@ public class OptionsPanel extends JPanel implements ActionListener
 				boolean team_enabled = false;
 				boolean starting_enabled = false;
 
-				if (game_mode == 1) // 6 player catan
+				if (game_data.game_mode == 1) // 6 player catan
 				{
 					special_build_enabled = true;
 				}
-				else if (game_mode > 1) // variable type games
+				else if (game_data.game_mode > 1) // variable type games
 				{
 					special_build_enabled = special_build.isSelected();
 					team_enabled = team.isSelected();
 					starting_enabled = starting.isSelected();
 				}
 				
-				players_amount = Integer.parseInt(player_str);
-				board_size = Integer.parseInt(size_str);
+				game_data.players_amount = Integer.parseInt(player_str);
+				game_data.board_size = Integer.parseInt(size_str);
 				
 				this.removeAll();
 				
 				player_select_panel.add(player_scroll_header);
 				
-				player_options_array = new PlayerOptionPanel[players_amount];
+				player_options_array = new PlayerOptionPanel[game_data.players_amount];
 				
-				for (int i = 0; i < players_amount; i++)
+				for (int i = 0; i < game_data.players_amount; i++)
 				{
 					// use stock colors first
 					int initial_color = 0;
@@ -388,11 +381,11 @@ public class OptionsPanel extends JPanel implements ActionListener
 			boolean team_enabled = false;
 			boolean starting_enabled = false;
 
-			if (game_mode == 1) // 6 player catan
+			if (game_data.game_mode == 1) // 6 player catan
 			{
 				special_build_enabled = true;
 			}
-			else if (game_mode > 1) // variable type games
+			else if (game_data.game_mode > 1) // variable type games
 			{
 				special_build_enabled = special_build.isSelected();
 				team_enabled = team.isSelected();
@@ -428,13 +421,13 @@ public class OptionsPanel extends JPanel implements ActionListener
 			
 			if (ok)
 			{
-				String types[] = new String[players_amount];
-				String names[] = new String[players_amount];
-				int colors[] = new int[players_amount];
-				int teams[] = new int[players_amount];
-				int poses[] = new int[players_amount];
+				String types[] = new String[game_data.players_amount];
+				String names[] = new String[game_data.players_amount];
+				int colors[] = new int[game_data.players_amount];
+				int teams[] = new int[game_data.players_amount];
+				int poses[] = new int[game_data.players_amount];
 				
-				for (int i = 0; i < players_amount; i++)
+				for (int i = 0; i < game_data.players_amount; i++)
 				{
 					types[i] = player_options_array[i].get_type();
 					names[i] = player_options_array[i].get_name();
@@ -443,7 +436,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 					poses[i] = player_options_array[i].get_pos();
 				}
 				
-				create_game_panels(engine_mode, game_mode, board_size, players_amount, special_build_enabled, team_enabled, starting_enabled, types, names, colors, teams, poses);
+				create_game_panels();
 			}
 			else
 			{
@@ -453,25 +446,13 @@ public class OptionsPanel extends JPanel implements ActionListener
 	}
 	
 	// pass player data to board panels, and cause parent frame to draw board
-	// engine_mode - engine or observer
-	// game_mode - what type of game it is (0 - 4 player catan, 1 - extension, 2 - variable normal, 3 - variable ext)
-	// board_size - size of board
-	// players_amount - how many players are there
-	// special_building_enabled - whether there is special building enabled
-	// team_enabled - whether there are teams
-	// starting_enabled - whether the players have decided starting order before hand
-	// types - player types array
-	// names - player name array
-	// colors - player colors array
-	// teams - player team number
-	// poses - player starting order
-	public void create_game_panels(int engine_mode, int game_mode, int board_size, int players_amount, boolean special_building_enabled, boolean team_enabled, boolean starting_enabled, String[] types, String[] names, int[] colors, int[] teams, int[] poses)
+	public void create_game_panels()
 	{
 		removeAll();
 		
 		frame.getContentPane().removeAll();
 		
-		BoardPanel board = new BoardPanel();
+		BoardPanel board = new BoardPanel(game_data);
 		
 		frame.setVisible(false);
 		frame.add(board);
