@@ -122,7 +122,7 @@ public class BoardPanel extends JPanel
 		return result;
 	}
 	
-	public BoardPanel()
+	public BoardPanel(GameData game_data)
 	{
 		Dimension pref = new Dimension(BOARD_WIDTH + 2*BOARD_WIDTH_MARGIN, BOARD_HEIGHT + BOARD_HEIGHT_MARGIN_TOP + BOARD_HEIGHT_MARGIN_BOTTOM);
 		this.setPreferredSize(pref);
