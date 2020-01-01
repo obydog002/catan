@@ -377,23 +377,23 @@ public class OptionsPanel extends JPanel implements ActionListener
 		}
 		else if (act == "submit2")
 		{	
-			boolean special_build_enabled = false;
-			boolean team_enabled = false;
-			boolean starting_enabled = false;
+			game_data.special_building_enabled = false;
+			game_data.team_enabled = false;
+			game_data.starting_enabled = false;
 
 			if (game_data.game_mode == 1) // 6 player catan
 			{
-				special_build_enabled = true;
+				game_data.special_building_enabled = true;
 			}
 			else if (game_data.game_mode > 1) // variable type games
 			{
-				special_build_enabled = special_build.isSelected();
-				team_enabled = team.isSelected();
-				starting_enabled = starting.isSelected();
+				game_data.special_building_enabled = special_build.isSelected();
+				game_data.team_enabled = team.isSelected();
+				game_data.starting_enabled = starting.isSelected();
 			}
 			
 			boolean ok = true;
-			if (starting_enabled)
+			if (game_data.starting_enabled)
 			{
 				// validate starting positions
 				
@@ -421,19 +421,19 @@ public class OptionsPanel extends JPanel implements ActionListener
 			
 			if (ok)
 			{
-				String types[] = new String[game_data.players_amount];
-				String names[] = new String[game_data.players_amount];
-				int colors[] = new int[game_data.players_amount];
-				int teams[] = new int[game_data.players_amount];
-				int poses[] = new int[game_data.players_amount];
+				game_data.types = new String[game_data.players_amount];
+				game_data.names = new String[game_data.players_amount];
+				game_data.colors = new int[game_data.players_amount];
+				game_data.teams = new int[game_data.players_amount];
+				game_data.poses = new int[game_data.players_amount];
 				
 				for (int i = 0; i < game_data.players_amount; i++)
 				{
-					types[i] = player_options_array[i].get_type();
-					names[i] = player_options_array[i].get_name();
-					colors[i] = player_options_array[i].get_color();
-					teams[i] = player_options_array[i].get_team();
-					poses[i] = player_options_array[i].get_pos();
+					game_data.types[i] = player_options_array[i].get_type();
+					game_data.names[i] = player_options_array[i].get_name();
+					game_data.colors[i] = player_options_array[i].get_color();
+					game_data.teams[i] = player_options_array[i].get_team();
+					game_data.poses[i] = player_options_array[i].get_pos();
 				}
 				
 				create_game_panels();
@@ -449,19 +449,10 @@ public class OptionsPanel extends JPanel implements ActionListener
 	public void create_game_panels()
 	{
 		removeAll();
-		
-		frame.getContentPane().removeAll();
-		
-		BoardPanel board = new BoardPanel(game_data);
-		
-		frame.setVisible(false);
-		frame.add(board);
-		
-		frame.revalidate();
-		frame.pack();
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
+		A_MainGamePanel MainPanel = new A_MainGamePanel(frame, game_data);
+	
 	}
+
 	
 	// takes the input and checks:
 	// - that it is a number
