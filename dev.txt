@@ -5,8 +5,17 @@ projected finish: 28/1/2019
 	- rework/clean up gui
 	- consolidate random instances to static in CatanMain
 	- replace board data structure with graph based implementation
+- Latex
+	- Describe architecture of packages/program
+	- mistakes section
+		- choice of initial data structure
+		- gui input handlers
+	- data strucutres/ algos
+	- balancing algorithms
 - GUI
-	- board data structure 											DONE 16/12/2019
+	- board data structure 				
+		- initial													DONE 16/12/2019
+		- update to better
 	- set reg/ext board types 										DONE 17/12/2019
 	- MouseListener 
 	- draw both board types, scaling, rotate						DONE 19/12/2019
@@ -23,12 +32,13 @@ projected finish: 28/1/2019
 			- roads													DONE 20/12/2019
 		- tokens 													DONE 19/12/2019
 		- ports
-	- options panel and other panels
-		- options													
-		- player options
+	- options panel and other panels								DONE 1/1/2020
+		- options													DONE 1/1/2020
+		- player options											
+			- initial 												DONE 1/1/2020
 			- better color picker
 			- better team/starting position selection
-		- start screen
+		- start scree
 - Game
 	- game logic
 		- store initial game configs for reg, ext boards
@@ -43,6 +53,10 @@ projected finish: 28/1/2019
 			- validate building/trading
 		- non-omnipresent mode (Observer)
 			- observer interface/trades/building
+	- board balancing algorithms
+		- 6_8 rule													DONE 28/12/2019
+		- vertex balance 
+		- tile token balance (?)
 	- interface for agents
 - Agents
 	- random agent
