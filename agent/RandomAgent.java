@@ -16,4 +16,9 @@ public class RandomAgent implements Agent
 	{
 		return color;
 	}
+
+	public Color get_alt_color()
+	{
+		return get_color().darker();
+	}
 }
