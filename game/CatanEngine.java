@@ -34,7 +34,6 @@ public class CatanEngine implements Catan
 	public void set_player_order()
 	{
 
-
 	} 
 
 	// singular dice roll
