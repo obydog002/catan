@@ -452,7 +452,6 @@ public class OptionsPanel extends JPanel implements ActionListener
 		A_MainGamePanel MainPanel = new A_MainGamePanel(frame, game_data);
 	
 	}
-
 	
 	// takes the input and checks:
 	// - that it is a number

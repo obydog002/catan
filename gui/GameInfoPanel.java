@@ -12,7 +12,6 @@ public class GameInfoPanel extends JPanel
     private JLabel Title;
     private JLabel Players[];
 
-
     public GameInfoPanel(GameData game_data)
     {
         this.setLayout(new GridLayout(0,1));
@@ -25,7 +24,6 @@ public class GameInfoPanel extends JPanel
          Players[i]= new JLabel(game_data.names[i]);
          Players[i].setOpaque(true);
          Players[i].setBackground(Color.decode(Integer.toString(game_data.colors[i])).darker());
-         //Players[i].setBackground(Color.decode(Integer.toString((game_data.colors[i] & 0x88888888))));
          this.add(Players[i]);
         }
     }
