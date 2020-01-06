@@ -1,5 +1,3 @@
-
-
 package catan.gui;
 import javax.swing.*;
 import java.awt.*;
