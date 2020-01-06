@@ -12,9 +12,7 @@ import catan.agent.*;
 // with robber
 public interface Catan
 {
-	
 	public void setup(int length, int type);
-
 	
 	public void print_state();
 	
@@ -23,7 +21,6 @@ public interface Catan
 
 	
 	public Color[] get_player_colors();
-
 	
 	// reset method for testing
 	// just randomizes it

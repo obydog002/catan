@@ -14,11 +14,24 @@ public class Vertex
 	// -1 for no port
 	private int port;
 	
+	// array indices
+	private int i, j;
+	
 	public Vertex()
 	{
 		this.player = -1;
 		this.type = -1;
 		this.port = -1;
+		i = j = -1;
+	}
+	
+	public Vertex(int i, int j)
+	{
+		this.player = -1;
+		this.type = -1;
+		this.port = -1;
+		this.i = i;
+		this.j = j;
 	}
 	
 	public void set(int player, int type, int port)
@@ -45,6 +58,6 @@ public class Vertex
 	
 	public String toString()
 	{
-		return "(" + player + " " + type + " " + port + ")";
+		return "{(" + i + "," + j + ")," + player + "," + type + "}";
 	}
 }

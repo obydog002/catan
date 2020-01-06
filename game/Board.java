@@ -4,6 +4,14 @@ import java.util.Random;
 
 public class Board
 {	
+	// head of nodeHex data structure, 
+	// Will be pointed to tiles[0][0]
+	// the references of the NodeHex nodes will determine what is geometrically and logically next
+	// to it
+	// all nodes will point to the same objects made 
+	// by the arrays, so that changes are reflected in both.
+	private NodeHex hex_head;
+	
 	// individual Tile hexes
 	// first arg corresponds to row
 	// second to collumn
@@ -39,6 +47,8 @@ public class Board
 	
 	public Board()
 	{
+		hex_head = null;
+		
 		this.tiles = null;
 		this.vertices = null;
 		this.edges = null;
@@ -66,7 +76,7 @@ public class Board
 		{
 			for (int j = 0; j < tiles[i].length; j++)
 			{
-				tiles[i][j] = new Tile();
+				tiles[i][j] = new Tile(i,j);
 			}
 		}
 		
@@ -94,7 +104,7 @@ public class Board
 		{
 			for (int j = 0; j < vertices[i].length; j++)
 			{
-				vertices[i][j] = new Vertex();
+				vertices[i][j] = new Vertex(i,j);
 			}
 		}
 		
@@ -121,7 +131,7 @@ public class Board
 		{
 			for (int j = 0; j < edges[i].length; j++)
 			{
-				edges[i][j] = new Edge();
+				edges[i][j] = new Edge(i,j);
 			}
 		}
 	}
@@ -148,7 +158,7 @@ public class Board
 		{
 			for (int j = 0; j < tiles[i].length; j++)
 			{
-				tiles[i][j] = new Tile();
+				tiles[i][j] = new Tile(i,j);
 			}
 		}
 		
@@ -167,7 +177,7 @@ public class Board
 		{
 			for (int j = 0; j < vertices[i].length; j++)
 			{
-				vertices[i][j] = new Vertex();
+				vertices[i][j] = new Vertex(i,j);
 			}
 		}
 		
@@ -188,7 +198,291 @@ public class Board
 		{
 			for (int j = 0; j < edges[i].length; j++)
 			{
-				edges[i][j] = new Edge();
+				edges[i][j] = new Edge(i,j);
+			}
+		}
+	}
+	
+	// sets the node data structure to reflect the array
+	// only call after ext,reg methods are called
+	public void initialize_nodes_normal()
+	{
+		int vert = tiles.length;
+		int half_v = vert/2;
+		
+		hex_head = new NodeHex(tiles[0][0]);
+		
+		NodeHex base = hex_head;
+		NodeHex node;
+		NodeHex temp;
+		
+		// Initializing nodehexes
+		for (int i = 0; i < vert; i++)
+		{
+			node = base;
+			
+			for (int j = 0; j < tiles[i].length - 1; j++)
+			{
+				node.hexes[2] = new NodeHex(tiles[i][j + 1]);
+				temp = node;
+				node = node.hexes[2];
+				node.hexes[5] = temp; 
+			}
+			
+			// if its the last row we dont initialize the next row of hexes
+			if (i < vert - 1)
+			{
+				int index = 3; // go right 
+				if (i < half_v) // otherwise goes left
+					index = 4;
+				
+				base.hexes[index] = new NodeHex(tiles[i + 1][0]);
+				temp = base;
+				base = base.hexes[index];
+				
+				// set the backwards link as well
+				if (index == 4)
+					base.hexes[1] = temp;
+				else
+					base.hexes[0] = temp;
+			}
+		}
+		
+		// assigning nodehex hexes array correctly
+		base = hex_head;
+		NodeHex prev_left = null;
+		NodeHex prev_right = null;
+		
+		NodeHex next_left = null;
+		NodeHex next_right = null;
+		
+		while (base != null)
+		{
+			node = base;
+			
+			if (base.hexes[4] == null)
+			{
+				next_left = null;
+				next_right = base.hexes[3];
+			}
+			else
+			{
+				next_left = base.hexes[4];
+				next_right = next_left.hexes[2];
+			}
+			
+			if (base.hexes[0] == null)
+			{
+				prev_left = null;
+				prev_right = base.hexes[1];
+			}
+			else
+			{
+				prev_left = base.hexes[0];
+				prev_right = prev_left.hexes[2];
+			}
+			
+			while (node != null)
+			{
+				node.hexes[0] = prev_left;
+				node.hexes[1] = prev_right;
+				
+				node.hexes[4] = next_left;
+				node.hexes[3] = next_right;
+				
+				
+				node = node.hexes[2];
+				
+				prev_left = prev_right;
+				if (prev_right != null)
+					prev_right = prev_right.hexes[2];
+				
+				next_left = next_right;
+				if (next_right != null)
+					next_right = next_right.hexes[2];
+			}
+			
+			
+			if (base.hexes[4] == null)
+				base = base.hexes[3];
+			else
+				base = base.hexes[4];
+		}
+		
+		// temporary array so we can build the node vertexes
+		NodeVertex temp_vertices[][] = new NodeVertex[vertices.length][];
+		
+		for (int i = 0; i < vertices.length; i++)
+		{
+			temp_vertices[i] = new NodeVertex[vertices[i].length];
+			for (int j = 0; j < vertices[i].length; j++)
+			{
+				temp_vertices[i][j] = new NodeVertex(vertices[i][j]);
+			}
+		}
+		
+		int i = 0, j = 0;
+		base = hex_head;
+		while (base != null)
+		{
+			j = 0;
+			node = base;
+			
+			while (node != null)
+			{
+				// vertices
+				int top_index = 2*i;
+				
+				int l_j = j;
+				int r_j = j + 1;
+				int t_j = j;
+				int b_j = j + 1;
+				
+				if (i > half_v)
+				{
+					t_j = j + 1;
+					b_j = j;
+				}
+				else if (i == half_v)
+				{
+					b_j = j;
+				}
+				
+				// set hex vertices
+				node.vertices[0] = temp_vertices[top_index + 1][l_j];
+				node.vertices[1] = temp_vertices[top_index][t_j];
+				node.vertices[2] = temp_vertices[top_index + 1][r_j];
+				node.vertices[3] = temp_vertices[top_index + 2][r_j];
+				node.vertices[4] = temp_vertices[top_index + 3][b_j];
+				node.vertices[5] = temp_vertices[top_index + 2][l_j];
+				
+				// connect hex vertices with parent hex
+				node.vertices[0].hexes[2] = node;
+				node.vertices[1].hexes[2] = node;
+				node.vertices[2].hexes[0] = node;
+				node.vertices[3].hexes[0] = node;
+				node.vertices[4].hexes[1] = node;
+				node.vertices[5].hexes[1] = node;
+				
+				// connect vertices to each other
+				node.vertices[0].vertices[1] = node.vertices[1];
+				node.vertices[1].vertices[2] = node.vertices[0];
+				
+				node.vertices[1].vertices[1] = node.vertices[2];
+				node.vertices[2].vertices[0] = node.vertices[1];
+				
+				node.vertices[2].vertices[2] = node.vertices[3];
+				node.vertices[3].vertices[0] = node.vertices[2];
+				
+				node.vertices[3].vertices[2] = node.vertices[4];
+				node.vertices[4].vertices[1] = node.vertices[3];
+				
+				node.vertices[4].vertices[0] = node.vertices[5];
+				node.vertices[5].vertices[1] = node.vertices[4];
+				
+				node.vertices[5].vertices[0] = node.vertices[0];
+				node.vertices[0].vertices[2] = node.vertices[5];
+				
+				// edges
+				t_j = 2*j;
+				b_j = 2*j + 1;
+				
+				if (i > half_v)
+				{
+					t_j++;
+					b_j--;
+				}
+				else if (i == half_v)
+				{
+					b_j--;
+				}
+				
+				node.vertices[0].edges[1] = edges[top_index][t_j];
+				node.vertices[1].edges[2] = edges[top_index][t_j];
+				
+				node.vertices[1].edges[1] = edges[top_index][t_j + 1];
+				node.vertices[2].edges[0] = edges[top_index][t_j + 1];
+				
+				node.vertices[2].edges[2] = edges[top_index + 1][j + 1];
+				node.vertices[3].edges[0] = edges[top_index + 1][j + 1];
+				
+				node.vertices[3].edges[2] = edges[top_index + 2][b_j + 1];
+				node.vertices[4].edges[1] = edges[top_index + 2][b_j + 1];
+				
+				node.vertices[4].edges[0] = edges[top_index + 2][b_j];
+				node.vertices[5].edges[1] = edges[top_index + 2][b_j];
+				
+				node.vertices[5].edges[0] = edges[top_index + 1][j];
+				node.vertices[0].edges[2] = edges[top_index + 1][j];
+				
+				node = node.hexes[2];
+				j++;
+			}
+			
+			if (base.hexes[4] == null)
+				base = base.hexes[3];
+			else
+				base = base.hexes[4];
+			
+			i++;
+		}
+		
+		// printing test
+		node = hex_head;
+		int dir = 0; // 0 right, then right-bot or left-bot
+		// 1 left, then left-bot or right bot
+		
+		while (node != null)
+		{
+			System.out.println(node + "\n");
+			
+			for (i = 0; i < 6; i++)
+			{
+				if (node.vertices[i] == null)
+				{
+					System.out.println(i + " null\n");
+				}
+				else
+					System.out.println("vertex " + i + ": " + node.vertices[i] + "\n");
+			}
+			
+			if (dir == 0)
+			{
+				if (node.hexes[2] != null)
+					node = node.hexes[2];
+				else if (node.hexes[3] != null)
+				{
+					node = node.hexes[3];
+					dir = 1;
+				}
+				else if (node.hexes[4] != null)
+				{
+					node = node.hexes[4];
+					dir = 1;
+				}
+				else
+				{
+					node = null;
+				}
+			}
+			else 
+			{
+				if (node.hexes[5] != null)
+					node = node.hexes[5];
+				else if (node.hexes[4] != null)
+				{
+					node = node.hexes[4];
+					dir = 0;
+				}
+				else if (node.hexes[3] != null)
+				{
+					node = node.hexes[3];
+					dir = 0;
+				}
+				else
+				{
+					node = null;
+				}
 			}
 		}
 	}
@@ -463,7 +757,7 @@ public class Board
 		return length;
 	}
 
-	public int has_Settlement(int i, int j)
+	public int has_settlement(int i, int j)
 	{
 		return -1;// return player number;
 	}
