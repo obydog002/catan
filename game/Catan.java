@@ -31,15 +31,23 @@ public abstract class Catan
 		if (type == 0) 
 		{
 			board.set_reg_hex(length);
+			
 			if (length == 3)
 				board.set_board(Config.REG_TILES, Config.REG_TOKENS, true);
+			else
+				board.test_randomize_all();
 		}
 		else
 		{
 			board.set_ext_hex(length);
+			
 			if (length == 4)
 				board.set_board(Config.EXT_TILES, Config.EXT_TOKENS, true);
+			else
+				board.test_randomize_all();
 		}
+		
+		board.initialize_nodes_normal();
 		
 		agents[0] = new RandomAgent(Color.WHITE);
 		agents[1] = new RandomAgent(Color.BLUE);
