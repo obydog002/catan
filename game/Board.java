@@ -428,7 +428,7 @@ public class Board
 		}
 		
 		// printing test
-		node = hex_head;
+		/*node = hex_head;
 		int dir = 0; // 0 right, then right-bot or left-bot
 		// 1 left, then left-bot or right bot
 		
@@ -484,7 +484,8 @@ public class Board
 					node = null;
 				}
 			}
-		}
+		}*/
+		
 	}
 	
 	// a method to set tiles with random hexes and tokens
