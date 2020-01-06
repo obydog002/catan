@@ -15,29 +15,29 @@ package catan.gui;
 // poses - player starting order
 public class GameData
 {
-	int engine_mode;
+	public int engine_mode;
 	
-	int game_mode;
+	public int game_mode;
 	
-	int board_size;
+	public int board_size;
 	
-	int players_amount;
+	public int players_amount;
 	
-	boolean special_building_enabled;
+	public boolean special_building_enabled;
 	
-	boolean team_enabled;
+	public boolean team_enabled;
 	
-	boolean starting_enabled;
+	public boolean starting_enabled;
 	
-	String types[];
+	public String types[];
 	
-	String names[];
+	public String names[];
 	
-	int colors[];
+	public int colors[];
 	
-	int teams[];
+	public int teams[];
 	
-	int poses[];
+	public int poses[];
 
 	public String toString()
 	{
