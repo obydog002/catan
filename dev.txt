@@ -4,7 +4,8 @@ projected finish: 28/1/2019
 - General 
 	- rework/clean up gui
 	- consolidate random instances to static in CatanMain
-	- replace board data structure with graph based implementation
+	- create graph based structure for board DS						DONE 6/1/2020
+	- reorganize package structure
 - Latex
 	- Describe architecture of packages/program
 	- mistakes section
@@ -38,7 +39,7 @@ projected finish: 28/1/2019
 			- initial 												DONE 1/1/2020
 			- better color picker
 			- better team/starting position selection
-		- start scree
+		- start screen
 - Game
 	- game logic
 		- store initial game configs for reg, ext boards
