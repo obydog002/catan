@@ -136,10 +136,6 @@ public class BoardPanel extends JPanel
 		
 		catan = new CatanEngine(game_data);
 		
-		int length = 2;
-		int type = 0;
-		catan.setup(length, type);
-		
 		player_col = catan.get_player_colors();
 	}
 	
@@ -165,8 +161,6 @@ public class BoardPanel extends JPanel
 		cursor_j = j;
 		
 		repaint();
-
-		System.out.println(cursor_i + " " + cursor_j);
 	}
 	
 	public void toggleRotate()
