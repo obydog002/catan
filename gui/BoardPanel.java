@@ -50,6 +50,10 @@ public class BoardPanel extends JPanel
 	
 	private static Color player_col[];
 	
+	private int cursor_i, cursor_j;
+
+	private int player_selected;
+
 	// static colors we use
 	private static final Color SEA_BLUE = new Color(220,220,255);
 	private static final Color LIGHT_RED = new Color(255,220,220);
@@ -124,18 +128,45 @@ public class BoardPanel extends JPanel
 	
 	public BoardPanel(GameData game_data)
 	{
+		cursor_i = cursor_j = 0;
+		player_selected = 0;
+
 		Dimension pref = new Dimension(BOARD_WIDTH + 2*BOARD_WIDTH_MARGIN, BOARD_HEIGHT + BOARD_HEIGHT_MARGIN_TOP + BOARD_HEIGHT_MARGIN_BOTTOM);
 		this.setPreferredSize(pref);
 		
-		catan = new CatanEngine();
+		catan = new CatanEngine(game_data);
 		
 		int length = 4;
 		int type = 1;
 		catan.setup(length, type);
 		
 		player_col = catan.get_player_colors();
+	}
+	
+	public void move_cursor(int d_i, int d_j)
+	{
+		int i = cursor_i + d_i;
+		int j = cursor_j + d_j;
+
+		Board board = catan.get_board();
+		Vertex vertices[][] = board.get_vertices();
+
+		if (i < 0)
+			i = 0;
+		else if (i >= vertices.length)
+			i = vertices.length - 1;
 		
-		input = new InputHandler(this);
+		if (j < 0)
+			j = 0;
+		else if (j >= vertices[i].length)
+			j = vertices[i].length - 1;
+
+		cursor_i = i;
+		cursor_j = j;
+		
+		repaint();
+
+		System.out.println(cursor_i + " " + cursor_j);
 	}
 	
 	public void toggleRotate()
@@ -161,7 +192,7 @@ public class BoardPanel extends JPanel
 	// custom drawing must be done for other board types
 	public void drawBoard(Graphics2D g)
 	{
-		Board board = catan.getBoard();
+		Board board = catan.get_board();
 		
 		if (board == null) 
 			return;
@@ -172,7 +203,7 @@ public class BoardPanel extends JPanel
 		int width = (int)current_dim.getWidth() - 2*BOARD_WIDTH_MARGIN;
 		int height = (int)current_dim.getHeight() - BOARD_HEIGHT_MARGIN_TOP - BOARD_HEIGHT_MARGIN_BOTTOM;
 		
-		// dont draw board if its too small	
+		// dont4 draw board if its too small	
 		if (width < 1 || height < 1) 
 		{
 			clear(g, LIGHT_RED);
@@ -329,7 +360,8 @@ public class BoardPanel extends JPanel
 			{
 				for (int j = 0; j < vertices[i].length; j++)
 				{
-					drawVertex(g, bounds[i][j].x, bounds[i][j].y, vertices[i][j]);
+					boolean temp_house = (i == cursor_i && j == cursor_j);
+					drawVertex(g, bounds[i][j].x, bounds[i][j].y, vertices[i][j], temp_house);
 				}
 			}
 		}
@@ -415,7 +447,8 @@ public class BoardPanel extends JPanel
 			{
 				for (int j = 0; j < vertices[i].length; j++)
 				{
-					drawVertex(g, bounds[i][j].x, bounds[i][j].y, vertices[i][j]);
+					boolean temp_house = i == cursor_i && j == cursor_j;
+					drawVertex(g, bounds[i][j].x, bounds[i][j].y, vertices[i][j], temp_house);
 				}
 			}
 		}
@@ -576,7 +609,6 @@ public class BoardPanel extends JPanel
 				// 10s digit
 				int d1 = number / 10;
 				int d0 = number % 10;
-				
 				g.drawImage(FONT[d1][0], x0 - digit_width, y0 - digit_width, digit_width, 2*digit_width, null);
 				g.drawImage(FONT[d0][0], x0, y0 - digit_width, digit_width, 2*digit_width, null);
 			}
@@ -625,13 +657,22 @@ public class BoardPanel extends JPanel
 	// x0 - x coord of vertex
 	// y0 - y coord of vertex
 	// vertex - house, city, port info
-	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex)
+	// temp_house - cursor location
+	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex, boolean temp_house)
 	{	
 		int player = vertex.get_player();
 		int type = vertex.get_type();
 		int port = vertex.get_port();
 		
-		if (player > -1)
+		if (temp_house)
+		{
+			int alpha_mask = 0x77FFFFFF;
+			int new_color = player_col[player_selected].getRGB() & alpha_mask;
+			System.out.println(String.format("Colour: 0x%08x\n", new_color));
+			Color col = new Color(new_color, true);
+			drawHouse(g, x0, y0, (int)(house_width*1.5), col);
+		}
+		else if (player > -1)
 		{
 			if (type == 0)
 			{
