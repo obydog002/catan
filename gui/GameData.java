@@ -38,4 +38,16 @@ public class GameData
 	int teams[];
 	
 	int poses[];
+
+	public String toString()
+	{
+		String str = "";
+		str += engine_mode + " " + game_mode + " " + board_size + " " + players_amount + " " + special_building_enabled + " " + team_enabled + " " + starting_enabled + "\n";
+		for (int i = 0; i < players_amount; i++)
+		{
+			str += types[i] + "\t\t" + names[i] + "\t\t" + String.format("0x%08x",colors[i]) + "\t\t" + teams[i] + "\t\t" + poses[i] + "\n";
+		}
+
+		return str;
+	}
 }

@@ -462,4 +462,9 @@ public class Board
 	{
 		return length;
 	}
+
+	public int has_Settlement(int i, int j)
+	{
+		return -1;// return player number;
+	}
 }

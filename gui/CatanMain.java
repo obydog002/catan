@@ -18,7 +18,7 @@ public class CatanMain
 	
 	public static void create_and_show_GUI()
 	{
-		JFrame frame = new JFrame("catan");
+		JFrame frame = new JFrame("Options");
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
