@@ -5,7 +5,8 @@ projected finish: 28/1/2019
 	- rework/clean up gui
 	- consolidate random instances to static in CatanMain
 	- create graph based structure for board DS						DONE 6/1/2020
-	- reorganize package structure
+		- test by drawing
+	- reorganize package structure									DONE 6/1/2020
 - Latex
 	- Describe architecture of packages/program
 	- mistakes section
@@ -57,7 +58,7 @@ projected finish: 28/1/2019
 	- board balancing algorithms
 		- 6_8 rule													DONE 28/12/2019
 		- vertex balance 
-		- tile token balance (?)
+		- tile token balance
 	- interface for agents
 - Agents
 	- random agent
