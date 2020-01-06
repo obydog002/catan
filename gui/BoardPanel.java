@@ -129,8 +129,8 @@ public class BoardPanel extends JPanel
 		
 		catan = new CatanEngine();
 		
-		int length = 4;
-		int type = 1;
+		int length = 2;
+		int type = 0;
 		catan.setup(length, type);
 		
 		player_col = catan.get_player_colors();
