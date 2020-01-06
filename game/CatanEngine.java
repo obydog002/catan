@@ -4,6 +4,8 @@ import java.util.Random;
 import catan.agent.*;
 import java.awt.Color;
 
+import catan.gui.GameData;
+
 public class CatanEngine implements Catan
 {
 	private static Random rng;
@@ -12,10 +14,7 @@ public class CatanEngine implements Catan
 		
 	private Agent[] agents;
 	
-	private catan.gui.GameData game_data;
-
-	// if special building is enabled
-	private boolean special_building;
+	private GameData game_data;
 
 	public CatanEngine(long seed)
 	{
@@ -23,12 +22,14 @@ public class CatanEngine implements Catan
 		rng = new Random(seed);
 	}
 	
-	public CatanEngine(catan.gui.GameData game_data)
+	public CatanEngine(GameData game_data)
 	{
 		this.game_data = game_data;
 		this.board = new Board();
-		agents = new Agent[4];
-		special_building = false;
+		
+		agents = new Agent[game_data.players_amount];
+		
+		setup(game_data.board_size, game_data.game_mode);
 	}
 
 	public void set_player_order()
@@ -47,6 +48,8 @@ public class CatanEngine implements Catan
 		if (type == 0) 
 		{
 			board.set_reg_hex(length);
+			board.initialize_nodes_normal();
+			
 			if (length == 3)
 				board.set_board(Config.REG_TILES, Config.REG_TOKENS, true);
 			else
@@ -55,16 +58,18 @@ public class CatanEngine implements Catan
 		else
 		{
 			board.set_ext_hex(length);
+			board.initialize_nodes_normal();
+			
 			if (length == 4)
 				board.set_board(Config.EXT_TILES, Config.EXT_TOKENS, true);
 			else
 				board.test_randomize_all();
 		}
 			
-		agents[0] = new RandomAgent(Color.RED);
-		agents[1] = new RandomAgent(Color.BLUE);
-		agents[2] = new RandomAgent(Color.RED);
-		agents[3] = new RandomAgent(Color.ORANGE);
+		for (int i = 0; i < agents.length; i++)
+		{
+			agents[i] = new HumanAgent(new Color(game_data.colors[i]));
+		}
 	}
 		
 	public void print_state()
@@ -90,13 +95,16 @@ public class CatanEngine implements Catan
 	}
 		
 	// reset method for testing
-	// just random-izes it
+	// if its catan 4-player or 6 it will use the standard setups
+	// otherwise it generates randomly using test_randomize_all
 	public void reset_board()
 	{
 		if (board.get_type() == 0 && board.get_length() == 3)
 			board.set_board(Config.REG_TILES, Config.REG_TOKENS, true);
 		else if (board.get_type() == 1 && board.get_length() == 4)
 			board.set_board(Config.EXT_TILES, Config.EXT_TOKENS, true);
+		else
+			board.test_randomize_all();
 	}
 
 }

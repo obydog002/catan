@@ -16,13 +16,9 @@ public interface Catan
 	
 	public void print_state();
 	
-	// get current board
 	public Board get_board();
-
 	
 	public Color[] get_player_colors();
 	
-	// reset method for testing
-	// just randomizes it
 	public void reset_board();
 }
