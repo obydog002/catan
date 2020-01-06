@@ -12,28 +12,36 @@ public class Tile
 	// if robber on this tile
 	private boolean robber = false;
 	
+	// array indices
+	// may be useful if using the node data structures
+	private int i, j;
+	
 	public Tile()
 	{
 		this.resource = -1;
 		this.number = 0;
-		
+		i = j = -1;
 	}
 	
-	public Tile(int resource)
+	public Tile(int i, int j)
 	{
-		this.resource = resource;
+		this.resource = -1;
 		this.number = 0;
+		this.i = i;
+		this.j = j;
 	}
 	
-	public Tile(int resource, int number)
+	public Tile(int resource, int number, int i, int j)
 	{
 		this.resource = resource;
 		this.number = number;
+		this.i = i;
+		this.j = j;
 	}
 	
 	public String toString()
 	{
-		return resource + " " + number;
+		return "{(" + i + "," + j + ")," + resource + "," + number + "," + robber + "}";
 	}
 	
 	// set resource type, number, robber

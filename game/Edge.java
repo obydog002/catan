@@ -9,10 +9,22 @@ public class Edge
 	// -1 for nothing, 0 for road
 	private int type;
 	
+	// array indices
+	private int i, j;
+	
 	public Edge()
 	{
 		this.player = -1;
 		this.type = -1;
+		i = j = -1;
+	}
+	
+	public Edge(int i, int j)
+	{
+		this.player = -1;
+		this.type = -1;
+		this.i = i;
+		this.j = j;
 	}
 
 	public void set(int player, int type)
@@ -23,7 +35,7 @@ public class Edge
 	
 	public String toString()
 	{
-		return "[" + player + "," + type + "]";
+		return "{(" + i + "," + j + ")," + player + "," + type + "}";
 	}
 	
 	public int get_player()
