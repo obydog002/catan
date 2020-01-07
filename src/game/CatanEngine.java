@@ -84,7 +84,14 @@ public class CatanEngine implements Catan
 		*/
 		//board.test_print_nodes();
 		board.test_print();
-		board.test_print_nodes();
+		
+		System.out.println();
+		
+		board.test_traverse_print(false);
+		
+		System.out.println();
+		
+		board.test_traverse_print(true);
 		
 		for (int i = 0; i < agents.length; i++)
 		{
