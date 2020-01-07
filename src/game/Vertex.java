@@ -60,4 +60,10 @@ public class Vertex
 	{
 		return "{(" + i + "," + j + ")," + player + "," + type + "}";
 	}
+	
+	// get i and j in 
+	public int[] get_index()
+	{
+		return new int[] {i,j};
+	}
 }

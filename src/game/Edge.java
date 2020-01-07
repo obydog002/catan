@@ -47,4 +47,10 @@ public class Edge
 	{
 		return type;
 	}
+	
+	// get i and j in 
+	public int[] get_index()
+	{
+		return new int[] {i,j};
+	}
 }
