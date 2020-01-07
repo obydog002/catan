@@ -14,7 +14,6 @@ public class HumanAgent implements Agent
 	
 	public Color get_color()
 	{
-        
         return color;
     }
     
