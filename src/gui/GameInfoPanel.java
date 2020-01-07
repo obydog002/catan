@@ -7,24 +7,22 @@ import java.awt.Color;
 
 public class GameInfoPanel extends JPanel
 {
-
-    private JLabel Title;
-    private JLabel Players[];
+    private JLabel title;
+    private JLabel players[];
 
     public GameInfoPanel(GameData game_data)
     {
         this.setLayout(new GridLayout(0,1));
-        Title = new JLabel("Players");
-        Players = new JLabel[game_data.players_amount];
-        this.add(Title);
+        title = new JLabel("Players");
+        players = new JLabel[game_data.players_amount];
+        this.add(title);
 
-        for(int i=0; i < game_data.players_amount; i++)
+        for(int i = 0; i < game_data.players_amount; i++)
         {
-         Players[i]= new JLabel(game_data.names[i]);
-         Players[i].setOpaque(true);
-         Players[i].setBackground(Color.decode(Integer.toString(game_data.colors[i])).darker());
-         this.add(Players[i]);
+			players[i] = new JLabel(game_data.names[i]);
+			players[i].setOpaque(true);
+			players[i].setBackground(new Color(game_data.colors[i]).darker());
+			this.add(players[i]);
         }
     }
-
 }

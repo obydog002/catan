@@ -5,7 +5,6 @@ import java.awt.*;
 
 public class A_MainGamePanel extends JPanel
 {
-
     public A_MainGamePanel(JFrame frame, GameData game_data)
     {
 		frame.getContentPane().removeAll();
@@ -22,8 +21,6 @@ public class A_MainGamePanel extends JPanel
         side_panel.add(game_info); 
         side_panel.add(options_panel);
         add(side_panel);
-
-		System.out.println(game_data);
 		
 		frame.setVisible(false);
 		frame.add(this);

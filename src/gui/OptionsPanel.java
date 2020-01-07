@@ -450,7 +450,6 @@ public class OptionsPanel extends JPanel implements ActionListener
 	{
 		removeAll();
 		A_MainGamePanel MainPanel = new A_MainGamePanel(frame, game_data);
-	
 	}
 	
 	// takes the input and checks:
