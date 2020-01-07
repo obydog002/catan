@@ -727,7 +727,7 @@ public class Board
 		{
 			for (int j = 0; j < vertices[i].length; j++)
 			{
-				int player = rng.nextInt(5) - 4;
+				int player = rng.nextInt(8) - 4;
 				int type = -1;
 				if (player > -1)
 					type = rng.nextInt(2);
