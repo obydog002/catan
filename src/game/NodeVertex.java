@@ -46,12 +46,24 @@ public class NodeVertex
 	
 	public String toString()
 	{
-		String result = vertex + "\n";
+		String result = vertex + "\nNeigbour Hexes:\n";
 		
 		for (int i = 0; i < 3; i++)
 		{
 			if (hexes[i] != null)
-				result += hexes[i].tile + "\n";
+				result += i + " " + hexes[i].tile + "\n";
+			else
+				result += i + " null\n";
+		}
+		
+		result += "vertices:\n";
+		
+		for (int i = 0; i < 3; i++)
+		{
+			if (vertices[i] != null)
+				result += i + " " + vertices[i].vertex + "\n";
+			else
+				result += i + " null\n";
 		}
 		
 		result += "edges:\n";
