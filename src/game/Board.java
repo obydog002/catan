@@ -137,7 +137,7 @@ public class Board
 	}
 
 	// set the board to be a hexagon with 
-	// length, length + 1, length + 1, length, length + 1, length + 1 dimensions
+	// length - 1, length, length, length - 1, length, length dimensions
 	public void set_ext_hex(int length)
 	{
 		this.type = 1;
@@ -389,12 +389,12 @@ public class Board
 				
 				if (i > half_v)
 				{
-					t_j++;
-					b_j--;
+					t_j = 2*j + 1;
+					b_j = 2*j;
 				}
 				else if (i == half_v)
 				{
-					b_j--;
+					b_j = 2*j;
 				}
 				
 				node.vertices[0].edges[1] = edges[top_index][t_j];
@@ -425,18 +425,22 @@ public class Board
 				base = base.hexes[4];
 			
 			i++;
-		}
-		
-		// printing test
-		/*node = hex_head;
+		}	
+	}
+	
+	// debug method for printing nodes
+	// to see their values
+	public void test_print_nodes()
+	{
+		NodeHex node = hex_head;
 		int dir = 0; // 0 right, then right-bot or left-bot
 		// 1 left, then left-bot or right bot
 		
 		while (node != null)
 		{
-			System.out.println(node + "\n");
+			System.out.println("hex: " + node + "\n");
 			
-			for (i = 0; i < 6; i++)
+			for (int i = 0; i < 6; i++)
 			{
 				if (node.vertices[i] == null)
 				{
@@ -484,8 +488,7 @@ public class Board
 					node = null;
 				}
 			}
-		}*/
-		
+		}
 	}
 	
 	// a method to set tiles with random hexes and tokens
@@ -662,7 +665,7 @@ public class Board
 		}
 	}
 	
-	public void print_test()
+	public void test_print()
 	{
 		for (int i = 0; i < tiles.length; i++)
 		{
@@ -714,7 +717,7 @@ public class Board
 			for (int j = 0; j < edges[i].length; j++)
 			{
 				int player = rng.nextInt(4);
-				int road = rng.nextInt(3) == 0 ? 0 : -1;
+				int road = 1;
 				
 				edges[i][j].set(player, road);
 			}
@@ -724,8 +727,13 @@ public class Board
 		{
 			for (int j = 0; j < vertices[i].length; j++)
 			{
-				int player = rng.nextInt(4);
-				int type = rng.nextInt(3) - 1;
+				int player = rng.nextInt(5) - 4;
+				int type = -1;
+				if (player > -1)
+					type = rng.nextInt(2);
+				else
+					player = -1;
+				
 				int port = rng.nextInt(10) == 0 ? 0 : -1;
 				
 				vertices[i][j].set(player, type, port);
@@ -758,6 +766,13 @@ public class Board
 		return length;
 	}
 
+	// returns head, which should point to the left-top most hex 
+	// of the board
+	public NodeHex get_head()
+	{
+		return hex_head;
+	}
+	
 	public int has_settlement(int i, int j)
 	{
 		return -1;// return player number;

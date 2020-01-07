@@ -46,7 +46,22 @@ public class CatanEngine implements Catan
 		
 	public void setup(int length, int type)
 	{
-		if (type == 0) 
+		if (type == 0 || type == 2)
+		{
+			board.set_reg_hex(length);
+			board.initialize_nodes_normal();
+			
+			board.test_randomize_all();
+		}
+		else if (type == 1 || type == 3)
+		{
+			board.set_ext_hex(length);
+			board.initialize_nodes_normal();
+			
+			board.test_randomize_all();
+		}
+		/*
+		if (type == 0 || type == 2) 
 		{
 			board.set_reg_hex(length);
 			board.initialize_nodes_normal();
@@ -56,7 +71,7 @@ public class CatanEngine implements Catan
 			else
 				board.test_randomize_all();
 		}
-		else
+		else if (type == 1 || type == 3)
 		{
 			board.set_ext_hex(length);
 			board.initialize_nodes_normal();
@@ -66,7 +81,10 @@ public class CatanEngine implements Catan
 			else
 				board.test_randomize_all();
 		}
-			
+		*/
+		//board.test_print_nodes();
+		board.test_print();
+		
 		for (int i = 0; i < agents.length; i++)
 		{
 			agents[i] = new HumanAgent(new Color(game_data.colors[i]));
@@ -75,7 +93,7 @@ public class CatanEngine implements Catan
 		
 	public void print_state()
 	{
-		board.print_test();
+		board.test_print();
 	}
 		
 	// get current board
