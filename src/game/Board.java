@@ -491,6 +491,168 @@ public class Board
 		}
 	}
 	
+	// perform a breadth-first or depth-first traversal over the nodehexes, nodevertices and edges
+	// prints each 
+	// breadth - true means BF, false is DF
+	public void test_traverse_print(boolean breadth)
+	{
+		int total_hex = 0;
+		boolean hex_seen[][] = new boolean[tiles.length][];
+		for (int i = 0; i < tiles.length; i++)
+		{
+			total_hex += tiles[i].length;
+			hex_seen[i] = new boolean[tiles[i].length];
+		}
+		
+		int total_vertex = 0;
+		boolean vertex_seen[][] = new boolean[vertices.length][];
+		for (int i = 0; i < vertices.length; i++)
+		{
+			total_vertex += vertices.length;
+			vertex_seen[i] = new boolean[vertices[i].length];
+		}
+		
+		int total_edge = 0;
+		boolean edge_seen[][] = new boolean[edges.length][];
+		for (int i = 0; i < edges.length; i++)
+		{
+			total_edge += edges.length;
+			edge_seen[i] = new boolean[edges[i].length];
+		}
+		
+		// function as a stack or a queue as needed
+		// just using arrays for now, not the most
+		// elegant solution but it will do for this.
+		// In the future I will either use java's stack/queue
+		// or create my own for AIs when traversing the board.
+		NodeHex hex_list[] = new NodeHex[total_hex];
+		NodeVertex vertex_list[] = new NodeVertex[total_vertex];
+		
+		// since there are more edges than vertices
+		NodeVertex edge_list[] = new NodeVertex[total_edge];
+		
+		System.out.println("hexes:");
+		
+		boolean empty = false;
+		
+		int head = -1;
+		if (breadth)
+			head = 0;
+		
+		int back = 1;
+		hex_list[0] = hex_head;
+		NodeHex next = hex_head;
+		int index[] = next.tile.get_index();
+		
+		hex_seen[index[0]][index[1]] = true;
+		
+		while (!empty)
+		{
+			System.out.println(next.tile);
+			
+			for (int i = 0; i < 6; i++)
+			{
+				if (next.hexes[i] != null)
+				{
+					index = next.hexes[i].tile.get_index();
+					if (!hex_seen[index[0]][index[1]]) // not been seen yet
+					{
+						hex_seen[index[0]][index[1]] = true;
+						
+						head++;
+						hex_list[head] = next.hexes[i];
+					}
+				}
+			}
+			
+			// get next element
+			if (breadth) // queue
+			{
+				if (back > head) // empty
+					empty = true;
+				else
+				{
+					next = hex_list[back];
+					back++;
+				}
+			}
+			else // stack
+			{
+				if (head == -1) // empty
+					empty = true;
+				else
+				{
+					next = hex_list[head];
+					head--;
+				}
+			}	
+		}
+		
+		System.out.println("\nvertices:");
+		
+		empty = false;
+		
+		head = -1;
+		if (breadth)
+			head = 0;
+		
+		back = 1;
+		vertex_list[0] = hex_head.vertices[0];
+		NodeVertex next_v = hex_head.vertices[0];
+		index = next_v.vertex.get_index();
+		
+		vertex_seen[index[0]][index[1]] = true;
+		
+		while (!empty)
+		{
+			System.out.println(next_v.vertex);
+			
+			for (int i = 0; i < 3; i++)
+			{
+				if (next_v.vertices[i] != null)
+				{
+					index = next_v.vertices[i].vertex.get_index();
+					
+					if (!vertex_seen[index[0]][index[1]])
+					{
+						vertex_seen[index[0]][index[1]] = true;
+						
+						head++;
+						vertex_list[head] = next_v.vertices[i];
+					}
+				}
+			}
+			
+			// get next element
+			if (breadth) // queue
+			{
+				if (back > head) // empty
+					empty = true;
+				else
+				{
+					next_v = vertex_list[back];
+					back++;
+				}
+			}
+			else // stack
+			{
+				if (head == -1) // empty
+					empty = true;
+				else
+				{
+					next_v = vertex_list[head];
+					head--;
+				}
+			}	
+		}
+		
+		System.out.println("\nedges:");
+		
+		empty = false;
+		
+		
+	}
+	
 	// a method to set tiles with random hexes and tokens
 	// board must be initialized first with 3-reg or 4-ext modes
 	// new methods needed for other boards as this assumes symmetric board types!!
