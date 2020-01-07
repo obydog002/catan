@@ -178,13 +178,16 @@ public class BoardPanel extends JPanel
 		
 		Graphics2D g2D = (Graphics2D)g;
 		
-		drawBoard(g2D);
+		if (!rotate)
+			draw_board(g2D);
+		else
+			draw_board_nodes(g2D);
 	}
 	
 	// currently only supports reguler and extension boards
 	// of any length
 	// custom drawing must be done for other board types
-	public void drawBoard(Graphics2D g)
+	public void draw_board(Graphics2D g)
 	{
 		Board board = catan.get_board();
 		
@@ -197,7 +200,7 @@ public class BoardPanel extends JPanel
 		int width = (int)current_dim.getWidth() - 2*BOARD_WIDTH_MARGIN;
 		int height = (int)current_dim.getHeight() - BOARD_HEIGHT_MARGIN_TOP - BOARD_HEIGHT_MARGIN_BOTTOM;
 		
-		// dont4 draw board if its too small	
+		// dont draw board if its too small	
 		if (width < 1 || height < 1) 
 		{
 			clear(g, LIGHT_RED);
@@ -211,33 +214,39 @@ public class BoardPanel extends JPanel
 		int x_half_length;
 		int y_half_length;
 		
+		int x_dist_edge = 0;
+		
 		if (rotate)
 		{
 			if (board.get_type() == 1)
 			{
 				x_half_length = (int)(width/(3*len - 1));
-				y_half_length = (int)(height/(3*len));
+				y_half_length = (int)(height/(4*len - 4));
+				
+				x_dist_edge = (3*len - 2)*x_half_length;
 			}
 			else
 			{
-				x_half_length = (int)(width/(2*len + 2));
+				x_half_length = (int)(width/(3*len - 1));
 				y_half_length = (int)(height/(4*len - 2));
+				
+				x_dist_edge = (3*len - 2)*x_half_length;
 			}
 		}
 		else
 		{
 			if (board.get_type() == 1)
 			{
-				x_half_length = (int)(width/(3*len));
+				x_half_length = (int)(width/(4*len - 4));
 				y_half_length = (int)(height/(3*len - 1));
 			}
 			else
 			{
 				x_half_length = (int)(width/(4*len - 2));
-				y_half_length = (int)(height/(2*len + 2));
+				y_half_length = (int)(height/(3*len - 1));
 			}
 		}
-		
+	
 		// set edge width
 		edge_width = (x_half_length < y_half_length) ? x_half_length/7 : y_half_length/7;
 		if (edge_width < 1) 
@@ -280,7 +289,7 @@ public class BoardPanel extends JPanel
 				for (int j = 0; j < tiles[i].length; j++)
 				{
 					// distances to center hex
-					int x_dist = x_margin + (int)(x_half_length*(1 + 1.5*(tiles.length - 1 - i)));
+					int x_dist = x_margin + x_dist_edge;
 					int y_dist = y_margin + y_half_length*(r + 1 + 2*j);
 					
 					drawHex(g, x_dist, y_dist, x_half_length, y_half_length, true, tiles[i][j]);
@@ -311,10 +320,52 @@ public class BoardPanel extends JPanel
 				
 				if (r == 0)
 					reverse = true;
+				
+				x_dist_edge -= 3*x_half_length/2;
 			}
 			
 			// edges
+			int mid = edges.length/2;
 			
+			for (int i = 0; i < edges.length; i++)
+			{
+				int dir = 1; // 1 means up first, 0 means down first
+				if (i > mid)
+				{
+					dir = 0;
+				}
+				
+				if (i % 2 == 0)
+				{
+					for (int j = 0; j < edges[i].length; j++)
+					{
+						int l_j = j/2;
+						int r_j = (j+1)/2;
+							
+						if (dir == 1)
+						{
+							
+							drawEdge(g, bounds[i + 1][l_j].x, bounds[i + 1][l_j].y, bounds[i][r_j].x, bounds[i][r_j].y, edges[i][j]);
+							dir = 0;
+						}
+						else
+						{
+							drawEdge(g, bounds[i][l_j].x, bounds[i][l_j].y, bounds[i + 1][r_j].x, bounds[i + 1][r_j].y, edges[i][j]);
+							dir = 1;
+						}
+					}
+				}
+				else
+				{
+					for (int j = 0; j < edges[i].length; j++)
+					{
+						drawEdge(g,bounds[i][j].x, bounds[i][j].y, bounds[i + 1][j].x, bounds[i + 1][j].y, edges[i][j]);
+					}
+				}
+			}
+			
+			// old edge code
+			/*
 			int mid = edges.length/2;
 			for (int j = 0; j < edges[mid].length; j++)
 			{
@@ -348,6 +399,7 @@ public class BoardPanel extends JPanel
 					
 				}
 			}
+			*/
 			
 			// vertices
 			for (int i = 0; i < vertices.length; i++)
@@ -362,13 +414,15 @@ public class BoardPanel extends JPanel
 		else
 		{
 			// tiles
+			int y_dist_edge = y_half_length;
+			
 			for (int i = 0; i < tiles.length; i++)
 			{
 				for (int j = 0; j < tiles[i].length; j++)
 				{
 					// distances to center of hex
 					int x_dist = x_margin + x_half_length*(r + 1 + 2*j);
-					int y_dist = y_margin + (int)(y_half_length*(1 + 1.5*i));
+					int y_dist = y_margin + y_dist_edge;
 					
 					drawHex(g, x_dist, y_dist, x_half_length, y_half_length, false, tiles[i][j]);
 					
@@ -398,10 +452,52 @@ public class BoardPanel extends JPanel
 				
 				if (r == 0)
 					reverse = true;
+				
+				y_dist_edge += 3*y_half_length/2;
 			}
 			
 			// edges
+			int mid = edges.length/2;
 			
+			for (int i = 0; i < edges.length; i++)
+			{
+				int dir = 1; // 1 means up first, 0 means down first
+				if (i > mid)
+				{
+					dir = 0;
+				}
+				
+				if (i % 2 == 0)
+				{
+					for (int j = 0; j < edges[i].length; j++)
+					{
+						int l_j = j/2;
+						int r_j = (j+1)/2;
+							
+						if (dir == 1)
+						{
+							
+							drawEdge(g, bounds[i + 1][l_j].x, bounds[i + 1][l_j].y, bounds[i][r_j].x, bounds[i][r_j].y, edges[i][j]);
+							dir = 0;
+						}
+						else
+						{
+							drawEdge(g, bounds[i][l_j].x, bounds[i][l_j].y, bounds[i + 1][r_j].x, bounds[i + 1][r_j].y, edges[i][j]);
+							dir = 1;
+						}
+					}
+				}
+				else
+				{
+					for (int j = 0; j < edges[i].length; j++)
+					{
+						drawEdge(g,bounds[i][j].x, bounds[i][j].y, bounds[i + 1][j].x, bounds[i + 1][j].y, edges[i][j]);
+					}
+				}
+			}
+			
+			// old edge drawing code
+			/*
 			int mid = edges.length/2;
 			for (int j = 0; j < edges[mid].length; j++)
 			{
@@ -434,7 +530,7 @@ public class BoardPanel extends JPanel
 					drawEdge(g, bounds[mid + 2*i + 2][j].x, bounds[mid + 2*i + 2][j].y, bounds[mid + 2*i + 1][j + 1].x, bounds[mid + 2*i + 1][j + 1].y, edges[mid + 2*i - 1][2*j + 1]);
 					
 				}
-			}
+			}*/
 			
 			// vertices
 			for (int i = 0; i < vertices.length; i++)
@@ -446,6 +542,122 @@ public class BoardPanel extends JPanel
 				}
 			}
 		}
+	}
+	
+	// test method for drawing the board using the nodes instead of array
+	// just to make sure the nodes are synced properly
+	public void draw_board_nodes(Graphics2D g)
+	{
+		Board board = catan.get_board();
+		
+		if (board == null) 
+			return;
+		
+		Dimension current_dim = this.getSize();
+		
+		// logical width and height
+		int width = (int)current_dim.getWidth() - 2*BOARD_WIDTH_MARGIN;
+		int height = (int)current_dim.getHeight() - BOARD_HEIGHT_MARGIN_TOP - BOARD_HEIGHT_MARGIN_BOTTOM;
+		
+		// dont draw board if its too small	
+		if (width < 1 || height < 1) 
+		{
+			clear(g, LIGHT_RED);
+			return;
+		}
+		else
+			clear(g, SEA_BLUE);
+		
+		int len = board.get_length();
+		
+		int x_half_length;
+		int y_half_length;
+		
+		if (board.get_type() == 1)
+		{
+			x_half_length = (int)(width/(4*len - 4));
+			y_half_length = (int)(height/(3*len - 1));
+		}
+		else
+		{
+			x_half_length = (int)(width/(4*len - 2));
+			y_half_length = (int)(height/(3*len - 1));
+		}
+		
+		// set edge width
+		edge_width = (x_half_length < y_half_length) ? x_half_length/7 : y_half_length/7;
+		if (edge_width < 1) 
+			edge_width = 1;
+		
+		// set house/city width
+		house_width = (x_half_length < y_half_length) ? 2*x_half_length/11 : 2*y_half_length/11;
+		if (house_width < 2)
+			edge_width = 2;
+		
+		// margins from edge
+		int x_margin = BOARD_WIDTH_MARGIN;
+		int y_margin = BOARD_HEIGHT_MARGIN_TOP;
+		
+		NodeHex base = board.get_head();
+		NodeHex node = base;
+		
+		int x_dist_edge = len * x_half_length;
+		int y_dist_edge = y_half_length;
+		while (base != null)
+		{
+			node = base;
+			
+			int x_half_steps = 0;
+			while (node != null)
+			{
+				int x_dist = x_margin + x_dist_edge + x_half_steps*x_half_length;
+				int y_dist = y_margin + y_dist_edge;
+				drawHex(g, x_dist, y_dist, x_half_length, y_half_length, false, node.tile);
+				
+				int[][] bounds = new int[6][2];
+				bounds[0][0] = x_dist - x_half_length;
+				bounds[0][1] = y_dist - y_half_length/2;
+				bounds[1][0] = x_dist;
+				bounds[1][1] = y_dist - y_half_length;
+				bounds[2][0] = x_dist + x_half_length;
+				bounds[2][1] = y_dist - y_half_length/2;
+				bounds[3][0] = x_dist + x_half_length;
+				bounds[3][1] = y_dist + y_half_length/2;
+				bounds[4][0] = x_dist;
+				bounds[4][1] = y_dist + y_half_length;
+				bounds[5][0] = x_dist - x_half_length;
+				bounds[5][1] = y_dist + y_half_length/2;
+				
+				int[] edge_order = {1, 1, 2, 2, 0, 0};
+				for (int i = 0; i < 6; i++)
+				{
+					drawEdge(g, bounds[i][0], bounds[i][1], bounds[(i + 1)%6][0], bounds[(i + 1)%6][1], node.vertices[i].edges[edge_order[i]]);
+				}
+				
+				for (int i = 0; i < 6; i++)
+				{
+					drawVertex(g, bounds[i][0], bounds[i][1], node.vertices[i].vertex, false);
+				}
+				
+				node = node.hexes[2];
+				x_half_steps += 2;
+			}
+			
+			if (base.hexes[4] == null)
+			{
+				base = base.hexes[3];
+				x_dist_edge += x_half_length;
+			}
+			else
+			{
+				base = base.hexes[4];
+				x_dist_edge -= x_half_length;
+			}
+			
+			y_dist_edge += 3*y_half_length/2;
+		}
+			
+		
 	}
 	
 	// how wide the edges/roads are
@@ -651,7 +863,7 @@ public class BoardPanel extends JPanel
 	// x0 - x coord of vertex
 	// y0 - y coord of vertex
 	// vertex - house, city, port info
-	// temp_house - cursor location
+	// temp_house - if this is the cursor location
 	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex, boolean temp_house)
 	{	
 		int player = vertex.get_player();
@@ -662,7 +874,6 @@ public class BoardPanel extends JPanel
 		{
 			int alpha_mask = 0x77FFFFFF;
 			int new_color = player_col[player_selected].getRGB() & alpha_mask;
-			System.out.println(String.format("Colour: 0x%08x\n", new_color));
 			Color col = new Color(new_color, true);
 			drawHouse(g, x0, y0, (int)(house_width*1.5), col);
 		}
