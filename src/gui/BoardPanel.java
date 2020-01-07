@@ -167,8 +167,6 @@ public class BoardPanel extends JPanel
 	{
 		rotate = !rotate;
 		
-		//catan.reset_board();
-		
 		repaint();
 	}
 	
@@ -178,9 +176,9 @@ public class BoardPanel extends JPanel
 		
 		Graphics2D g2D = (Graphics2D)g;
 		
-		if (!rotate)
-			draw_board(g2D);
-		else
+		//if (!rotate)
+		//	draw_board(g2D);
+		//else
 			draw_board_nodes(g2D);
 	}
 	
