@@ -6,7 +6,7 @@ public class NodeHex
 	static String string_order[] = {"top-left", "top-right", "right", "bot-right", "bot-left", "left"};
 	
 	// this hex
-	Tile tile;
+	public Tile tile;
 	
 	// array indexes order
 	// vertices are on the left (clockwise) of the number
@@ -26,8 +26,8 @@ public class NodeHex
 	// 			  v4
 	//
 	
-	NodeHex hexes[];
-	NodeVertex vertices[];
+	public NodeHex hexes[];
+	public NodeVertex vertices[];
 	
 	public NodeHex(Tile tile)
 	{

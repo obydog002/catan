@@ -3,11 +3,11 @@ package src.game;
 public class NodeVertex
 {
 	// vertex data at this point
-	Vertex vertex;
+	public Vertex vertex;
 	
 	// edges which correspond to edges from this vertex to the other 3 vertex nodes
 	// must be same edge as linked with the actual vertex!
-	Edge edges[];
+	public Edge edges[];
 	
 	// hexes, edges, vertices order
 	// hexes are on left of number
@@ -24,8 +24,8 @@ public class NodeVertex
 	//
 	
 
-	NodeHex hexes[];
-	NodeVertex vertices[];
+	public NodeHex hexes[];
+	public NodeVertex vertices[];
 	
 	public NodeVertex(Vertex vertex)
 	{
