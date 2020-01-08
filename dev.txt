@@ -5,10 +5,11 @@ projected finish: 28/1/2019
 	- rework/clean up gui
 	- consolidate random instances to static in CatanMain
 	- create graph based structure for board DS						DONE 6/1/2020
-	- testing of board DS											
+	- testing of board DS											DONE 8/1/2020						
 		- test by drawing											DONE 7/1/2020
 		- test by printing											DONE 7/1/2020
-		- test traversal
+		- test traversal											DONE 8/1/2020
+	- rewrite some algos using node DS
 	- reorganize package structure									DONE 6/1/2020
 	- figure out the alt color stuff
 - Latex
@@ -19,10 +20,10 @@ projected finish: 28/1/2019
 	- data strucutres/ algos
 	- balancing algorithms
 - GUI
-	- board data structure 											
+	- board data structure 											DONE 8/1/2020	
 		- initial													DONE 16/12/2019
-		- update to better											
-			- test
+		- update to better											DONE 8/1/2020					
+			- test													DONE 8/1/2020
 	- set reg/ext board types 										DONE 17/12/2019
 	- MouseListener 
 	- draw both board types, scaling, rotate						DONE 19/12/2019
