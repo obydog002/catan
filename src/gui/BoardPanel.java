@@ -176,9 +176,9 @@ public class BoardPanel extends JPanel
 		
 		Graphics2D g2D = (Graphics2D)g;
 		
-		//if (!rotate)
-		//	draw_board(g2D);
-		//else
+		if (!rotate)
+			draw_board(g2D);
+		else
 			draw_board_nodes(g2D);
 	}
 	
@@ -626,10 +626,9 @@ public class BoardPanel extends JPanel
 				bounds[5][0] = x_dist - x_half_length;
 				bounds[5][1] = y_dist + y_half_length/2;
 				
-				int[] edge_order = {1, 1, 2, 2, 0, 0};
 				for (int i = 0; i < 6; i++)
 				{
-					drawEdge(g, bounds[i][0], bounds[i][1], bounds[(i + 1)%6][0], bounds[(i + 1)%6][1], node.vertices[i].edges[edge_order[i]]);
+					drawEdge(g, bounds[i][0], bounds[i][1], bounds[(i + 1)%6][0], bounds[(i + 1)%6][1], node.edges[i].edge);
 				}
 				
 				for (int i = 0; i < 6; i++)
