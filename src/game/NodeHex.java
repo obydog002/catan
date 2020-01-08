@@ -28,6 +28,7 @@ public class NodeHex
 	
 	public NodeHex hexes[];
 	public NodeVertex vertices[];
+	public NodeEdge edges[];
 	
 	public NodeHex(Tile tile)
 	{
@@ -35,11 +36,13 @@ public class NodeHex
 		
 		hexes = new NodeHex[6];
 		vertices = new NodeVertex[6];
+		edges = new NodeEdge[6];
 		
 		for (int i = 0; i < 6; i++)
 		{
 			hexes[i] = null;
 			vertices[i] = null;
+			edges[i] = null;
 		}
 	}
 	

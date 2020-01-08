@@ -5,10 +5,6 @@ public class NodeVertex
 	// vertex data at this point
 	public Vertex vertex;
 	
-	// edges which correspond to edges from this vertex to the other 3 vertex nodes
-	// must be same edge as linked with the actual vertex!
-	public Edge edges[];
-	
 	// hexes, edges, vertices order
 	// hexes are on left of number
 	// 
@@ -26,13 +22,13 @@ public class NodeVertex
 
 	public NodeHex hexes[];
 	public NodeVertex vertices[];
+	public NodeEdge edges[];
 	
 	public NodeVertex(Vertex vertex)
 	{
 		this.vertex = vertex;
 		
-		edges = new Edge[3];
-		
+		edges = new NodeEdge[3];
 		hexes = new NodeHex[3];
 		vertices = new NodeVertex[3];
 		
@@ -70,7 +66,10 @@ public class NodeVertex
 		
 		for (int i = 0; i < 3; i++)
 		{
-			result += edges[i] + "\n";
+			if (edges[i] != null)
+				result += edges[i].edge + "\n";
+			else
+				result += "null\n";
 		}
 		
 		return result;
