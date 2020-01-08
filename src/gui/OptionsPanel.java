@@ -39,10 +39,8 @@ public class OptionsPanel extends JPanel implements ActionListener
 	private JRadioButton engine;
 	private JRadioButton observer;
 		
-	private JRadioButton n_reg;	
-	private JRadioButton n_ext;		
-	private JRadioButton v_reg;	
-	private JRadioButton v_ext;
+	private JRadioButton reg;
+	private JRadioButton ext;
 	
 	private JPanel size;
 	private JLabel size_label;
@@ -103,10 +101,8 @@ public class OptionsPanel extends JPanel implements ActionListener
 		engine = new JRadioButton("engine");	
 		observer = new JRadioButton("observer");
 		
-		n_reg = new JRadioButton("4 player catan");		
-		n_ext = new JRadioButton("6 player catan");		
-		v_reg = new JRadioButton("variable normal catan");		
-		v_ext = new JRadioButton("variable extension catan");
+		reg = new JRadioButton("catan");	
+		ext = new JRadioButton("catan extension");
 	
 		engine.setActionCommand("engine");
 		observer.setActionCommand("observer");
@@ -122,15 +118,11 @@ public class OptionsPanel extends JPanel implements ActionListener
 		options[0].add(engine);
 		options[0].add(observer);
 		
-		n_reg.setActionCommand("n_reg");
-		n_ext.setActionCommand("n_ext");
-		v_reg.setActionCommand("v_reg");
-		v_ext.setActionCommand("v_ext");
+		reg.setActionCommand("reg");
+		ext.setActionCommand("ext");
 		
-		n_reg.addActionListener(this);
-		n_ext.addActionListener(this);
-		v_reg.addActionListener(this);
-		v_ext.addActionListener(this);
+		reg.addActionListener(this);
+		ext.addActionListener(this);
 		
 		size = new JPanel(new GridLayout(1,0));
 		size_label = new JLabel("size of board");
@@ -172,15 +164,11 @@ public class OptionsPanel extends JPanel implements ActionListener
 			
 			ButtonGroup group = new ButtonGroup();
 			
-			group.add(n_reg);
-			group.add(n_ext);
-			group.add(v_reg);
-			group.add(v_ext);
+			group.add(reg);
+			group.add(ext);
 			
-			options[1].add(n_reg);
-			options[1].add(n_ext);
-			options[1].add(v_reg);
-			options[1].add(v_ext);
+			options[1].add(reg);
+			options[1].add(ext);
 			
 			options[1].revalidate();
 			options[1].repaint();
@@ -205,42 +193,27 @@ public class OptionsPanel extends JPanel implements ActionListener
 			options[2].revalidate();
 			options[2].repaint();
 		}
-		else if (act == "n_reg" || act == "n_ext")
+		else if (act == "reg" || act == "ext")
 		{
-			if (act == "n_reg")
+			if (act == "reg")
 			{
-				players_input.setText("4");
-				size_input.setText("3");
 				game_data.game_mode = 0;
+				
+				size_input.setText("3");
+				players_input.setText("4");
+				special_build.setSelected(false);
+				team.setSelected(false);
+				team.setSelected(false);
 			}
 			else
 			{
-				players_input.setText("6");
-				size_input.setText("4");
 				game_data.game_mode = 1;
-			}
-			
-			options[2].removeAll();
-			
-			options[2].add(players);
-			options[2].add(submit);
-			
-			options[2].revalidate();
-			options[2].repaint();
-		}
-		else if (act == "v_reg" || act == "v_ext")
-		{
-			if (act == "v_reg")
-			{
-				players_input.setText("4");
-				size_input.setText("3");
-				game_data.game_mode = 2;
-			}
-			else 
-			{
-				players_input.setText("6");
+				
 				size_input.setText("4");
-				game_data.game_mode = 3;
+				players_input.setText("6");
+				special_build.setSelected(true);
+				team.setSelected(false);
+				team.setSelected(false);
 			}
 			
 			options[2].removeAll();
@@ -266,17 +239,6 @@ public class OptionsPanel extends JPanel implements ActionListener
 			int player_upper = 1000000; // 1 million should be enough
 			int size_lower = 1;
 			int size_upper = 1000000;
-			
-			if (game_data.game_mode == 0)
-			{
-				player_upper = 4;
-				size_str = "3";
-			}
-			else if (game_data.game_mode == 1)
-			{
-				player_upper = 6;
-				size_str = "4";
-			}
 			
 			boolean ok = true;
 			boolean first = true;
@@ -329,16 +291,9 @@ public class OptionsPanel extends JPanel implements ActionListener
 				boolean team_enabled = false;
 				boolean starting_enabled = false;
 
-				if (game_data.game_mode == 1) // 6 player catan
-				{
-					special_build_enabled = true;
-				}
-				else if (game_data.game_mode > 1) // variable type games
-				{
-					special_build_enabled = special_build.isSelected();
-					team_enabled = team.isSelected();
-					starting_enabled = starting.isSelected();
-				}
+				special_build_enabled = special_build.isSelected();
+				team_enabled = team.isSelected();
+				starting_enabled = starting.isSelected();
 				
 				game_data.players_amount = Integer.parseInt(player_str);
 				game_data.board_size = Integer.parseInt(size_str);
