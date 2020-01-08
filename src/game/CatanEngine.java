@@ -83,7 +83,7 @@ public class CatanEngine implements Catan
 		}
 		*/
 		//board.test_print_nodes();
-		board.test_print();
+		//board.test_print();
 		
 		System.out.println();
 		
@@ -97,11 +97,6 @@ public class CatanEngine implements Catan
 		{
 			agents[i] = new HumanAgent(new Color(game_data.colors[i]));
 		}
-	}
-		
-	public void print_state()
-	{
-		board.test_print();
 	}
 		
 	// get current board
