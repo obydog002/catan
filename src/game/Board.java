@@ -321,6 +321,17 @@ public class Board
 			}
 		}
 		
+		NodeEdge temp_edges[][] = new NodeEdge[edges.length][];
+		
+		for (int i = 0; i < edges.length; i++)
+		{
+			temp_edges[i] = new NodeEdge[edges[i].length];
+			for (int j = 0; j < edges[i].length; j++)
+			{
+				temp_edges[i][j] = new NodeEdge(edges[i][j]);
+			}
+		}
+		
 		int i = 0, j = 0;
 		base = hex_head;
 		while (base != null)
@@ -383,7 +394,6 @@ public class Board
 				node.vertices[5].vertices[0] = node.vertices[0];
 				node.vertices[0].vertices[2] = node.vertices[5];
 				
-				// edges
 				t_j = 2*j;
 				b_j = 2*j + 1;
 				
@@ -397,23 +407,45 @@ public class Board
 					b_j = 2*j;
 				}
 				
-				node.vertices[0].edges[1] = edges[top_index][t_j];
-				node.vertices[1].edges[2] = edges[top_index][t_j];
+				// connect edges to hexes
+				node.edges[0] = temp_edges[top_index][t_j];
+				node.edges[1] = temp_edges[top_index][t_j + 1];
+				node.edges[2] = temp_edges[top_index + 1][j + 1];
+				node.edges[3] = temp_edges[top_index + 2][b_j + 1];
+				node.edges[4] = temp_edges[top_index + 2][b_j];
+				node.edges[5] = temp_edges[top_index + 1][j];
 				
-				node.vertices[1].edges[1] = edges[top_index][t_j + 1];
-				node.vertices[2].edges[0] = edges[top_index][t_j + 1];
+				// connect edges to vertices, connect vertices to edges
+				node.edges[0].vertices[0] = node.vertices[1];
+				node.edges[0].vertices[1] = node.vertices[0];
+				node.vertices[0].edges[1] = node.edges[0];
+				node.vertices[1].edges[2] = node.edges[0];
 				
-				node.vertices[2].edges[2] = edges[top_index + 1][j + 1];
-				node.vertices[3].edges[0] = edges[top_index + 1][j + 1];
+				node.edges[1].vertices[0] = node.vertices[1];
+				node.edges[1].vertices[1] = node.vertices[2];
+				node.vertices[1].edges[1] = node.edges[1];
+				node.vertices[2].edges[0] = node.edges[1];
 				
-				node.vertices[3].edges[2] = edges[top_index + 2][b_j + 1];
-				node.vertices[4].edges[1] = edges[top_index + 2][b_j + 1];
+				node.edges[2].vertices[0] = node.vertices[2];
+				node.edges[2].vertices[1] = node.vertices[3];
+				node.vertices[2].edges[2] = node.edges[2];
+				node.vertices[3].edges[0] = node.edges[2];
 				
-				node.vertices[4].edges[0] = edges[top_index + 2][b_j];
-				node.vertices[5].edges[1] = edges[top_index + 2][b_j];
+				node.edges[3].vertices[0] = node.vertices[3];
+				node.edges[3].vertices[1] = node.vertices[4];
+				node.vertices[3].edges[2] = node.edges[3];
+				node.vertices[4].edges[1] = node.edges[3];
 				
-				node.vertices[5].edges[0] = edges[top_index + 1][j];
-				node.vertices[0].edges[2] = edges[top_index + 1][j];
+				node.edges[4].vertices[0] = node.vertices[5];
+				node.edges[4].vertices[1] = node.vertices[4];
+				node.vertices[4].edges[0] = node.edges[4];
+				node.vertices[5].edges[1] = node.edges[4];
+				
+				node.edges[5].vertices[0] = node.vertices[0];
+				node.edges[5].vertices[1] = node.vertices[5];
+				node.vertices[5].edges[0] = node.edges[5];
+				node.vertices[0].edges[2] = node.edges[5];
+				
 				
 				node = node.hexes[2];
 				j++;
@@ -443,11 +475,17 @@ public class Board
 			for (int i = 0; i < 6; i++)
 			{
 				if (node.vertices[i] == null)
-				{
-					System.out.println(i + " null\n");
-				}
+					System.out.println("vertex " + i + ": null\n");
 				else
 					System.out.println("vertex " + i + ": " + node.vertices[i] + "\n");
+			}
+			
+			for (int i = 0; i < 6; i++)
+			{
+				if (node.edges[i] == null)
+					System.out.println("edge " + i + ": null\n");
+				else
+					System.out.println("edge " + i + ": " + node.edges[i].edge + "\n");
 			}
 			
 			if (dir == 0)
@@ -527,9 +565,7 @@ public class Board
 		// or create my own for AIs when traversing the board.
 		NodeHex hex_list[] = new NodeHex[total_hex];
 		NodeVertex vertex_list[] = new NodeVertex[total_vertex];
-		
-		// since there are more edges than vertices
-		NodeVertex edge_list[] = new NodeVertex[total_edge];
+		NodeEdge edge_list[] = new NodeEdge[total_edge];
 		
 		System.out.println("hexes:");
 		
@@ -650,7 +686,64 @@ public class Board
 		
 		empty = false;
 		
+		head = -1;
+		if (breadth)
+			head = 0;
 		
+		back = 1;
+		edge_list[0] = hex_head.edges[0];
+		NodeEdge next_e = hex_head.edges[0];
+		index = next_e.edge.get_index();
+		
+		edge_seen[index[0]][index[1]] = true;
+		
+		while (!empty)
+		{
+			System.out.println(next_e.edge);
+			
+			for (int i = 0; i < 2; i++)
+			{
+				// both vertices should never be null
+				next_v = next_e.vertices[i];
+				
+				for (int j = 0; j < 3; j++)
+				{
+					if (next_v.edges[j] != null)
+					{
+						index = next_v.edges[j].edge.get_index();
+						if (!edge_seen[index[0]][index[1]])
+						{
+							edge_seen[index[0]][index[1]] = true;
+							
+							head++;
+							edge_list[head] = next_v.edges[j];
+						}
+					}
+				}
+			}
+			
+			// get next element
+			if (breadth) // queue
+			{
+				if (back > head) // empty
+					empty = true;
+				else
+				{
+					next_e = edge_list[back];
+					back++;
+				}
+			}
+			else // stack
+			{
+				if (head == -1) // empty
+					empty = true;
+				else
+				{
+					next_e = edge_list[head];
+					head--;
+				}
+			}	
+		}
 	}
 	
 	// a method to set tiles with random hexes and tokens
