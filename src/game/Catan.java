@@ -14,8 +14,6 @@ public interface Catan
 {
 	public void setup(int length, int type);
 	
-	public void print_state();
-	
 	public Board get_board();
 	
 	public Color[] get_player_colors();
