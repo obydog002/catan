@@ -46,52 +46,21 @@ public class CatanEngine implements Catan
 		
 	public void setup(int length, int type)
 	{
-		if (type == 0 || type == 2)
+		if (type == 0)
 		{
 			board.set_reg_hex(length);
 			board.initialize_nodes_normal();
 			
-			board.test_randomize_all();
 		}
-		else if (type == 1 || type == 3)
+		else if (type == 1)
 		{
 			board.set_ext_hex(length);
 			board.initialize_nodes_normal();
-			
-			board.test_randomize_all();
 		}
-		/*
-		if (type == 0 || type == 2) 
-		{
-			board.set_reg_hex(length);
-			board.initialize_nodes_normal();
-			
-			if (length == 3)
-				board.set_board(Config.REG_TILES, Config.REG_TOKENS, true);
-			else
-				board.test_randomize_all();
-		}
-		else if (type == 1 || type == 3)
-		{
-			board.set_ext_hex(length);
-			board.initialize_nodes_normal();
-			
-			if (length == 4)
-				board.set_board(Config.EXT_TILES, Config.EXT_TOKENS, true);
-			else
-				board.test_randomize_all();
-		}
-		*/
-		//board.test_print_nodes();
-		//board.test_print();
 		
-		System.out.println();
+		board.test_randomize_all();
 		
-		board.test_traverse_print(false);
-		
-		System.out.println();
-		
-		board.test_traverse_print(true);
+		board.traverse_edge_print(true, true);
 		
 		for (int i = 0; i < agents.length; i++)
 		{
@@ -117,7 +86,7 @@ public class CatanEngine implements Catan
 	}
 		
 	// reset method for testing
-	// if its catan 4-player or 6 it will use the standard setups
+	// if its regular catan 4-player or 6 it will use the standard setups
 	// otherwise it generates randomly using test_randomize_all
 	public void reset_board()
 	{
