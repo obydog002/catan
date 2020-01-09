@@ -54,6 +54,10 @@ public class BoardPanel extends JPanel
 
 	private int player_selected;
 
+	// boundry for calculating how the mouse click will interact with
+	// hexes, vertices and edges.
+	private Point bounds[][];
+	
 	// static colors we use
 	private static final Color SEA_BLUE = new Color(220,220,255);
 	private static final Color LIGHT_RED = new Color(255,220,220);
@@ -137,6 +141,19 @@ public class BoardPanel extends JPanel
 		catan = new CatanEngine(game_data);
 		
 		player_col = catan.get_player_colors();
+		
+		Board board = catan.get_board();
+		Vertex[][] vertices = board.get_vertices();
+		
+		bounds = new Point[vertices.length][];
+		for (int i = 0; i < vertices.length; i++)
+		{
+			bounds[i] = new Point[vertices[i].length];
+			for (int j = 0; j < vertices[i].length; j++)
+			{
+				bounds[i][j] = new Point();
+			}
+		}
 	}
 	
 	public void move_cursor(int d_i, int d_j)
@@ -263,18 +280,6 @@ public class BoardPanel extends JPanel
 		Edge[][] edges = board.get_edges();
 		Vertex[][] vertices = board.get_vertices();
 		
-		// to control where edges and vertices go
-		Point[][] bounds = new Point[vertices.length][];
-		for (int i = 0; i < bounds.length; i++)
-		{
-			bounds[i] = new Point[vertices[i].length];
-			
-			for (int j = 0; j < bounds[i].length; j++)
-			{
-				bounds[i][j] = new Point();
-			}
-		}
-		
 		// control drawing in correct position
 		boolean reverse = false;
 		int r = len - 1;
@@ -361,43 +366,6 @@ public class BoardPanel extends JPanel
 					}
 				}
 			}
-			
-			// old edge code
-			/*
-			int mid = edges.length/2;
-			for (int j = 0; j < edges[mid].length; j++)
-			{
-				drawEdge(g, bounds[mid][j].x, bounds[mid][j].y, bounds[mid + 1][j].x, bounds[mid + 1][j].y, edges[mid][j]);
-			}
-			
-			for (int j = 0; j < edges[mid - 1].length/2; j++)
-			{
-				drawEdge(g, bounds[mid][j].x, bounds[mid][j].y, bounds[mid - 1][j].x, bounds[mid - 1][j].y, edges[mid - 1][2*j]);
-				drawEdge(g, bounds[mid - 1][j].x, bounds[mid - 1][j].y, bounds[mid][j + 1].x, bounds[mid][j + 1].y, edges[mid - 1][2*j + 1]);
-				
-				drawEdge(g, bounds[mid + 1][j].x, bounds[mid + 1][j].y, bounds[mid + 2][j].x, bounds[mid + 2][j].y, edges[mid + 1][2*j]);
-				drawEdge(g, bounds[mid + 2][j].x, bounds[mid + 2][j].y, bounds[mid + 1][j + 1].x, bounds[mid + 1][j + 1].y, edges[mid + 1][2*j + 1]);
-			}
-			
-			for (int i = 1; i < len; i++)
-			{
-				for (int j = 0; j < edges[mid - 2*i].length; j++)
-				{
-					drawEdge(g, bounds[mid - 2*i][j].x, bounds[mid - 2*i][j].y, bounds[mid - 2*i + 1][j].x, bounds[mid - 2*i + 1][j].y, edges[mid - 2*i][j]);
-					drawEdge(g, bounds[mid + 2*i][j].x, bounds[mid + 2*i][j].y, bounds[mid + 2*i + 1][j].x, bounds[mid + 2*i + 1][j].y, edges[mid + 2*i][j]);
-				}
-				
-				for (int j = 0; j < edges[mid - 2*i - 1].length/2; j++)
-				{
-					drawEdge(g, bounds[mid - 2*i][j].x, bounds[mid - 2*i][j].y, bounds[mid - 2*i - 1][j].x, bounds[mid - 2*i - 1][j].y, edges[mid - 2*i - 1][2*j]);
-					drawEdge(g, bounds[mid - 2*i - 1][j].x, bounds[mid - 2*i - 1][j].y, bounds[mid - 2*i][j + 1].x, bounds[mid - 2*i][j + 1].y, edges[mid - 2*i - 1][2*j + 1]);
-					
-					drawEdge(g, bounds[mid + 2*i + 1][j].x, bounds[mid + 2*i + 1][j].y, bounds[mid + 2*i + 2][j].x, bounds[mid + 2*i + 2][j].y, edges[mid + 2*i - 1][2*j]);
-					drawEdge(g, bounds[mid + 2*i + 2][j].x, bounds[mid + 2*i + 2][j].y, bounds[mid + 2*i + 1][j + 1].x, bounds[mid + 2*i + 1][j + 1].y, edges[mid + 2*i - 1][2*j + 1]);
-					
-				}
-			}
-			*/
 			
 			// vertices
 			for (int i = 0; i < vertices.length; i++)
@@ -754,30 +722,6 @@ public class BoardPanel extends JPanel
 		radius  = 2*radius/5;
 		
 		drawToken(g, x0, y0, radius, 5, number, tile.get_robber());
-		
-		// draw black border
-		g.setColor(Color.BLACK);
-		g.setStroke(new BasicStroke(edge_width));
-		
-		if (orient)
-		{
-			g.drawLine(x0 - x_half_length/2, y0 - y_half_length, x0 + x_half_length/2, y0 - y_half_length);
-			g.drawLine(x0 + x_half_length/2, y0 - y_half_length, x0 + x_half_length, y0);
-			g.drawLine(x0 + x_half_length, y0, x0 + x_half_length/2, y0 + y_half_length);
-			g.drawLine(x0 + x_half_length/2, y0 + y_half_length, x0 - x_half_length/2, y0 + y_half_length);
-			g.drawLine(x0 - x_half_length/2, y0 + y_half_length, x0 - x_half_length, y0);
-			g.drawLine(x0 - x_half_length, y0, x0 - x_half_length/2, y0 - y_half_length);
-		}
-		else
-		{
-			g.drawLine(x0, y0 - y_half_length, x0 + x_half_length, y0 - y_half_length/2);
-			g.drawLine(x0 + x_half_length, y0 - y_half_length/2, x0 + x_half_length, y0 + y_half_length/2);
-			g.drawLine(x0 + x_half_length, y0 + y_half_length/2, x0, y0 + y_half_length);
-			g.drawLine(x0, y0 + y_half_length, x0 - x_half_length, y0 + y_half_length/2);
-			g.drawLine(x0 - x_half_length, y0 + y_half_length/2, x0 - x_half_length, y0 - y_half_length/2);
-			g.drawLine(x0 - x_half_length, y0 - y_half_length/2, x0, y0 - y_half_length);
-		}
-		
 	}
 	
 	// draws the token with number on it for tiles
@@ -843,16 +787,22 @@ public class BoardPanel extends JPanel
 		int player = edge.get_player();
 		int type = edge.get_type();
 		
-		// draw the road
+		// draw the road if present
 		if (player > -1 && type > -1)
 		{
 			g.setColor(player_col[player]);
 			
 			// make it a little thicker
 			g.setStroke(new BasicStroke(edge_width + 2));
-			g.drawLine(x0,y0,x1,y1);
+		}
+		else // otherwise just draw border
+		{
+			g.setColor(Color.BLACK);
+			
+			g.setStroke(new BasicStroke(edge_width));
 		}
 		
+		g.drawLine(x0,y0,x1,y1);
 	}
 	
 	// drawing houses/cities
