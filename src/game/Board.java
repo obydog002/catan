@@ -529,33 +529,18 @@ public class Board
 		}
 	}
 	
-	// perform a breadth-first or depth-first traversal over the nodehexes, nodevertices and edges
+	// perform a breadth-first or depth-first traversal over nodehexes
 	// prints each 
 	// breadth - true means BF, false is DF
-	public void test_traverse_print(boolean breadth)
+	// verbose - true means prints neighbouring information as well, false just hex info
+	public void traverse_hex_print(boolean breadth, boolean verbose)
 	{
-		int total_hex = 0;
-		boolean hex_seen[][] = new boolean[tiles.length][];
+		int total = 0;
+		boolean seen[][] = new boolean[tiles.length][];
 		for (int i = 0; i < tiles.length; i++)
 		{
-			total_hex += tiles[i].length;
-			hex_seen[i] = new boolean[tiles[i].length];
-		}
-		
-		int total_vertex = 0;
-		boolean vertex_seen[][] = new boolean[vertices.length][];
-		for (int i = 0; i < vertices.length; i++)
-		{
-			total_vertex += vertices.length;
-			vertex_seen[i] = new boolean[vertices[i].length];
-		}
-		
-		int total_edge = 0;
-		boolean edge_seen[][] = new boolean[edges.length][];
-		for (int i = 0; i < edges.length; i++)
-		{
-			total_edge += edges.length;
-			edge_seen[i] = new boolean[edges[i].length];
+			total += tiles[i].length;
+			seen[i] = new boolean[tiles[i].length];
 		}
 		
 		// function as a stack or a queue as needed
@@ -563,9 +548,7 @@ public class Board
 		// elegant solution but it will do for this.
 		// In the future I will either use java's stack/queue
 		// or create my own for AIs when traversing the board.
-		NodeHex hex_list[] = new NodeHex[total_hex];
-		NodeVertex vertex_list[] = new NodeVertex[total_vertex];
-		NodeEdge edge_list[] = new NodeEdge[total_edge];
+		NodeHex list[] = new NodeHex[total];
 		
 		System.out.println("hexes:");
 		
@@ -576,27 +559,31 @@ public class Board
 			head = 0;
 		
 		int back = 1;
-		hex_list[0] = hex_head;
-		NodeHex next = hex_head;
+		list[0] = hex_head;
+		NodeHex next = list[0];
 		int index[] = next.tile.get_index();
 		
-		hex_seen[index[0]][index[1]] = true;
+		seen[index[0]][index[1]] = true;
 		
 		while (!empty)
 		{
-			System.out.println(next.tile);
+			System.out.println("Hex:" + next.tile);
+			if (verbose)
+			{
+				System.out.println(next.neighbour_info());
+			}
 			
 			for (int i = 0; i < 6; i++)
 			{
 				if (next.hexes[i] != null)
 				{
 					index = next.hexes[i].tile.get_index();
-					if (!hex_seen[index[0]][index[1]]) // not been seen yet
+					if (!seen[index[0]][index[1]]) // not been seen yet
 					{
-						hex_seen[index[0]][index[1]] = true;
+						seen[index[0]][index[1]] = true;
 						
 						head++;
-						hex_list[head] = next.hexes[i];
+						list[head] = next.hexes[i];
 					}
 				}
 			}
@@ -608,7 +595,7 @@ public class Board
 					empty = true;
 				else
 				{
-					next = hex_list[back];
+					next = list[back];
 					back++;
 				}
 			}
@@ -618,43 +605,63 @@ public class Board
 					empty = true;
 				else
 				{
-					next = hex_list[head];
+					next = list[head];
 					head--;
 				}
 			}	
 		}
+	}
+	
+	// traversal for node vertices
+	// breadth - true bf, false df
+	// verbose - neighbour info
+	public void traverse_vertex_print(boolean breadth, boolean verbose)
+	{
+		int total = 0;
+		boolean seen[][] = new boolean[vertices.length][];
+		for (int i = 0; i < vertices.length; i++)
+		{
+			total += vertices.length;
+			seen[i] = new boolean[vertices[i].length];
+		}
 		
-		System.out.println("\nvertices:");
+		NodeVertex list[] = new NodeVertex[total];
 		
-		empty = false;
+		System.out.println("vertices:");
 		
-		head = -1;
+		boolean empty = false;
+		
+		int head = -1;
 		if (breadth)
 			head = 0;
 		
-		back = 1;
-		vertex_list[0] = hex_head.vertices[0];
-		NodeVertex next_v = hex_head.vertices[0];
-		index = next_v.vertex.get_index();
+		int back = 1;
+		list[0] = hex_head.vertices[0];
+		NodeVertex next = list[0];
+		int index[] = next.vertex.get_index();
 		
-		vertex_seen[index[0]][index[1]] = true;
+		seen[index[0]][index[1]] = true;
 		
 		while (!empty)
 		{
-			System.out.println(next_v.vertex);
+			System.out.println("vertex: " + next.vertex);
+			if (verbose)
+			{
+				System.out.println(next.neighbour_info());
+			}
 			
 			for (int i = 0; i < 3; i++)
 			{
-				if (next_v.vertices[i] != null)
+				if (next.vertices[i] != null)
 				{
-					index = next_v.vertices[i].vertex.get_index();
+					index = next.vertices[i].vertex.get_index();
 					
-					if (!vertex_seen[index[0]][index[1]])
+					if (!seen[index[0]][index[1]])
 					{
-						vertex_seen[index[0]][index[1]] = true;
+						seen[index[0]][index[1]] = true;
 						
 						head++;
-						vertex_list[head] = next_v.vertices[i];
+						list[head] = next.vertices[i];
 					}
 				}
 			}
@@ -666,7 +673,7 @@ public class Board
 					empty = true;
 				else
 				{
-					next_v = vertex_list[back];
+					next = list[back];
 					back++;
 				}
 			}
@@ -676,47 +683,67 @@ public class Board
 					empty = true;
 				else
 				{
-					next_v = vertex_list[head];
+					next = list[head];
 					head--;
 				}
 			}	
 		}
+	}
+	
+	// traversal for node edges
+	// breadth - true bf, false df
+	// verbose - neighbour info
+	public void traverse_edge_print(boolean breadth, boolean verbose)
+	{
+		int total = 0;
+		boolean seen[][] = new boolean[edges.length][];
+		for (int i = 0; i < edges.length; i++)
+		{
+			total += edges.length;
+			seen[i] = new boolean[edges[i].length];
+		}
 		
-		System.out.println("\nedges:");
+		NodeEdge list[] = new NodeEdge[total];
 		
-		empty = false;
+		System.out.println("edges:");
 		
-		head = -1;
+		boolean empty = false;
+		
+		int head = -1;
 		if (breadth)
 			head = 0;
 		
-		back = 1;
-		edge_list[0] = hex_head.edges[0];
-		NodeEdge next_e = hex_head.edges[0];
-		index = next_e.edge.get_index();
+		int back = 1;
+		list[0] = hex_head.edges[0];
+		NodeEdge next = list[0];
+		int index[] = next.edge.get_index();
 		
-		edge_seen[index[0]][index[1]] = true;
+		seen[index[0]][index[1]] = true;
 		
 		while (!empty)
 		{
-			System.out.println(next_e.edge);
+			System.out.println("edge: " + next.edge);
+			if (verbose)
+			{
+				System.out.println(next.neighbour_info());
+			}
 			
 			for (int i = 0; i < 2; i++)
 			{
 				// both vertices should never be null
-				next_v = next_e.vertices[i];
+				NodeVertex v = next.vertices[i];
 				
 				for (int j = 0; j < 3; j++)
 				{
-					if (next_v.edges[j] != null)
+					if (v.edges[j] != null)
 					{
-						index = next_v.edges[j].edge.get_index();
-						if (!edge_seen[index[0]][index[1]])
+						index = v.edges[j].edge.get_index();
+						if (!seen[index[0]][index[1]])
 						{
-							edge_seen[index[0]][index[1]] = true;
+							seen[index[0]][index[1]] = true;
 							
 							head++;
-							edge_list[head] = next_v.edges[j];
+							list[head] = v.edges[j];
 						}
 					}
 				}
@@ -729,7 +756,7 @@ public class Board
 					empty = true;
 				else
 				{
-					next_e = edge_list[back];
+					next = list[back];
 					back++;
 				}
 			}
@@ -739,7 +766,7 @@ public class Board
 					empty = true;
 				else
 				{
-					next_e = edge_list[head];
+					next = list[head];
 					head--;
 				}
 			}	
