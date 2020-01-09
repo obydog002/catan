@@ -26,4 +26,16 @@ public class NodeEdge
 		vertices[0] = null;
 		vertices[1] = null;
 	}
+	
+	public String neighbour_info()
+	{
+		String result = "neighbour vertices:\n";
+		
+		for (int i = 0; i < 2; i++)
+		{
+			result += i + ": " + vertices[i].vertex + "\n";
+		}
+		
+		return result;
+	}
 }

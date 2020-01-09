@@ -40,9 +40,9 @@ public class NodeVertex
 		}
 	}
 	
-	public String toString()
+	public String neighbour_info()
 	{
-		String result = vertex + "\nNeigbour Hexes:\n";
+		String result = "neigbour hexes:\n";
 		
 		for (int i = 0; i < 3; i++)
 		{
@@ -52,7 +52,7 @@ public class NodeVertex
 				result += i + " null\n";
 		}
 		
-		result += "vertices:\n";
+		result += "neighbour vertices:\n";
 		
 		for (int i = 0; i < 3; i++)
 		{
@@ -62,7 +62,7 @@ public class NodeVertex
 				result += i + " null\n";
 		}
 		
-		result += "edges:\n";
+		result += "neighbour edges:\n";
 		
 		for (int i = 0; i < 3; i++)
 		{

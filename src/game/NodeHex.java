@@ -61,4 +61,31 @@ public class NodeHex
 		
 		return result;
 	}
+	
+	// method to print neighbouring info
+	public String neighbour_info()
+	{
+		String result = "neighbour hexes:\n";
+		for (int i = 0; i < 6; i++)
+		{
+			if (hexes[i] != null)
+				result += i + " " + hexes[i].tile + "\n";
+			else
+				result += i + " null\n";
+		}
+		
+		result += "neighbour verticies:\n";
+		for (int i = 0; i < 6; i++)
+		{
+			result += i + " " + vertices[i].vertex + "\n";
+		}
+		
+		result += "neighbour edges:\n";
+		for (int i = 0; i < 6; i++)
+		{
+			result += i + " " + edges[i].edge + "\n";
+		}
+		
+		return result;
+	}
 }
