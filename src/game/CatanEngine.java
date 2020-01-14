@@ -49,18 +49,16 @@ public class CatanEngine implements Catan
 		if (type == 0)
 		{
 			board.set_reg_hex(length);
-			board.initialize_nodes_normal();
 			
 		}
 		else if (type == 1)
 		{
 			board.set_ext_hex(length);
-			board.initialize_nodes_normal();
 		}
 		
 		board.test_randomize_all();
 		
-		board.traverse_edge_print(true, true);
+		board.initialize_nodes_normal();
 		
 		for (int i = 0; i < agents.length; i++)
 		{
