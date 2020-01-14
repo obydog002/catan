@@ -28,6 +28,9 @@ public class NodeVertex
 	{
 		this.vertex = vertex;
 		
+		if (vertex != null)
+			vertex.node_vertex = this;
+		
 		edges = new NodeEdge[3];
 		hexes = new NodeHex[3];
 		vertices = new NodeVertex[3];

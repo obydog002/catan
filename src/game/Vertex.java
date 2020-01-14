@@ -17,12 +17,17 @@ public class Vertex
 	// array indices
 	private int i, j;
 	
+	// parent NodeVertex
+	public NodeVertex node_vertex;
+	
 	public Vertex()
 	{
 		this.player = -1;
 		this.type = -1;
 		this.port = -1;
 		i = j = -1;
+		
+		node_vertex = null;
 	}
 	
 	public Vertex(int i, int j)
@@ -32,6 +37,8 @@ public class Vertex
 		this.port = -1;
 		this.i = i;
 		this.j = j;
+		
+		node_vertex = null;
 	}
 	
 	public void set(int player, int type, int port)
@@ -40,7 +47,7 @@ public class Vertex
 		this.type = type;
 		this.port = port;
 	}
-	
+
 	public int get_player()
 	{
 		return player;

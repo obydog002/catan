@@ -34,6 +34,10 @@ public class NodeHex
 	{
 		this.tile = tile;
 		
+		// set the parent info
+		if (tile != null)
+			tile.node_hex = this;
+		
 		hexes = new NodeHex[6];
 		vertices = new NodeVertex[6];
 		edges = new NodeEdge[6];

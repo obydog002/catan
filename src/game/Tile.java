@@ -16,11 +16,16 @@ public class Tile
 	// may be useful if using the node data structures
 	private int i, j;
 	
+	// parent NodeHex
+	public NodeHex node_hex;
+	
 	public Tile()
 	{
 		this.resource = -1;
 		this.number = 0;
 		i = j = -1;
+		
+		node_hex = null;
 	}
 	
 	public Tile(int i, int j)
@@ -29,6 +34,8 @@ public class Tile
 		this.number = 0;
 		this.i = i;
 		this.j = j;
+		
+		node_hex = null;
 	}
 	
 	public Tile(int resource, int number, int i, int j)

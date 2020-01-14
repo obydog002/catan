@@ -22,6 +22,9 @@ public class NodeEdge
 	{
 		this.edge = edge;
 		
+		if (edge != null)
+			edge.node_edge = this;
+		
 		vertices = new NodeVertex[2];
 		vertices[0] = null;
 		vertices[1] = null;

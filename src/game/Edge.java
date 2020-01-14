@@ -12,11 +12,16 @@ public class Edge
 	// array indices
 	private int i, j;
 	
+	// parent NodeEdge 
+	public NodeEdge node_edge;
+	
 	public Edge()
 	{
 		this.player = -1;
 		this.type = -1;
 		i = j = -1;
+		
+		node_edge = null;
 	}
 	
 	public Edge(int i, int j)
@@ -25,6 +30,8 @@ public class Edge
 		this.type = -1;
 		this.i = i;
 		this.j = j;
+		
+		node_edge = null;
 	}
 
 	public void set(int player, int type)
