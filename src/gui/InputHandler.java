@@ -65,29 +65,6 @@ public class InputHandler implements MouseListener, ActionListener, MouseMotionL
 	
 	public void actionPerformed(ActionEvent e)
 	{
-		int i = 0, j =0;
-		String act = e.getActionCommand();
-		if (act == "up")
-		{
-			i--;
-		}
-		else if (act == "down")
-		{
-			i++;
-		}
-		else if (act == "left")
-		{
-			j--;
-		}
-		else if (act == "right")
-		{
-			j++;
-		}
-		else if (act == "confirm")
-		{
-
-		}
-
-		panel.move_cursor(i, j);
+		
 	}
 }
