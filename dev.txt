@@ -26,6 +26,12 @@ projected finish: 28/1/2019
 			- test													DONE 8/1/2020
 	- set reg/ext board types 										DONE 17/12/2019
 	- MouseListener 
+		- mouse collisions
+			- tiles													DONE 14/1/2020
+			- vertices												DONE 15/1/2020
+			- edges													DONE 15/1/2020
+			- handle rotation	
+			- testing 												
 	- draw both board types, scaling, rotate						DONE 19/12/2019
 		- hexes reg													DONE 17/12/2019
 		- hexes ext													DONE 17/12/2019
