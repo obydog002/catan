@@ -50,11 +50,10 @@ public class BoardPanel extends JPanel
 	
 	private static Color player_col[];
 	
+	private int selected_i, selected_j;
+	
 	// which hex the mouse is hovering over
 	private int hex_selected_i, hex_selected_j;
-	
-	// will need to remove this soon	---------------------------------------------
-	private int cursor_i, cursor_j;
 
 	// mouse coordinates
 	private int mouse_x, mouse_y;
@@ -72,11 +71,16 @@ public class BoardPanel extends JPanel
 	// hex center
 	private Point hex_center[][];
 	
+	// alpha mask
+	private static final int ALP_MASK = 0x77FFFFFF;
+	
 	// static colors we use
 	private static final Color SEA_BLUE = new Color(220,220,255);
 	private static final Color LIGHT_RED = new Color(255,220,220);
 	private static final Color BEIGE = new Color(255, 253, 208);
 	private static final Color DARK_GREY = new Color(25,25,25);
+	
+	private static final Color TRANS_RED = new Color(Color.RED.getRGB() & ALP_MASK, true);
 	
 	private static final Color WOOD_TILE_COL = new Color(155,62,0);
 	private static final Color BRICK_TILE_COL = new Color(255,206,208);
@@ -84,9 +88,6 @@ public class BoardPanel extends JPanel
 	private static final Color WHEAT_TILE_COL = new Color(255,233,137);
 	private static final Color ORE_TILE_COL = new Color(192,192,192);
 	private static final Color DESERT_TILE_COL = new Color(255,239,216);
-	
-	// alpha mask
-	private static final int ALP_MASK = 0x77FFFFFF;
 	
 	// path to catan-master
 	private static final File PATH = new File(BoardPanel.class.getProtectionDomain().getCodeSource().getLocation().getPath());
@@ -149,10 +150,11 @@ public class BoardPanel extends JPanel
 	
 	public BoardPanel(GameData game_data)
 	{
-		cursor_i = cursor_j = 0; // REMOVE SOON -------------------------------------
-		
 		hex_selected_i = -1;
 		hex_selected_j = -1;
+		
+		selected_i = -1;
+		selected_j = -1;
 		
 		player_selected = 0;
 
@@ -199,15 +201,17 @@ public class BoardPanel extends JPanel
 		this.mouse_x = x;
 		this.mouse_y = y;
 		
-		find_board_hex(x, y);
-		repaint();
+		//find_board_hex(x, y);
+		//find_board_vertex(x, y);
+		find_board_edge(x,y);
 		
+		repaint();	
 	}
 	
 	// will try to find the nearest hex to the coordinates supplied on the board
 	// x,y - point coordinates
 	// sets the hex_selected fields to nearest
-	// or doesnt do anything if nothing found near
+	// or sets to -1,-1 if none found
 	public void find_board_hex(int x, int y)
 	{
 		// if either are 0 dont proceed
@@ -254,7 +258,7 @@ public class BoardPanel extends JPanel
 			base_i *= 2;
 			
 			// the index is within the rectangle part of the hex
-			if (cor_y % height_part > y_half_length/2)
+			if (cor_y % height_part >= y_half_length/2)
 			{
 				base_i++;
 			}
@@ -367,7 +371,7 @@ public class BoardPanel extends JPanel
 						return;
 					}
 					
-					cor_x -= x_left;;
+					cor_x -= x_left;
 					
 					int base_j = cor_x / (2*x_half_length);
 					double left_x = vertex_bounds[base_i][base_j].x;
@@ -469,12 +473,261 @@ public class BoardPanel extends JPanel
 		return;
 	}
 	
+	// tries to find nearest vertex using circle collision
+	// x,y - point coordinates
+	// sets selected fields to nearest index
+	// or sets to -1,-1 if none
+	public void find_board_vertex(int x, int y)
+	{
+		if (x_half_length == 0 || y_half_length == 0)
+		{
+			return;
+		}
+		
+		int r0 = y_half_length/2; // half of vertical edge length
+		
+		int r1 = (int)Math.sqrt(x_half_length*x_half_length/4 + y_half_length*y_half_length/16); // half of angled edge
+		
+		int r = (r0 > r1) ? r0 : r1; // max of radius
+		
+		int vert_length = vertex_bounds.length;
+		
+		if (rotate)
+		{
+			
+		}
+		else
+		{
+			// bounds checking for y
+			if (y <= vertex_bounds[0][0].y - y_half_length || y >= vertex_bounds[vert_length - 1][0].y + y_half_length)
+			{
+				selected_i = -1;
+				selected_j = -1;
+				return;
+			}
+			
+			int cor_y = y - (vertex_bounds[0][0].y - y_half_length/2);
+			
+			int base_i = cor_y / (3*y_half_length/2);
+			base_i *= 2;
+			
+			if (base_i >= vert_length)
+			{
+				selected_i = -1;
+				selected_j = -1;
+				return;
+			}
+			
+		
+			int first_i = base_i + 1;
+			int second_i = base_i;
+			
+			// bottom half of board
+			if (base_i >= vert_length/2)
+			{
+				first_i = base_i;
+				second_i = base_i + 1;
+			}
+
+			int x_left = vertex_bounds[first_i][0].x - x_half_length/2;
+			int horz_length = vertex_bounds[first_i].length;
+			int x_right = vertex_bounds[first_i][horz_length - 1].x + x_half_length/2;
+				
+			// x bounds checking
+			if (x <= x_left || x >= x_right)
+			{
+				selected_i = -1;
+				selected_j = -1;
+				return;
+			}
+				
+			int cor_x = x - x_left;
+				
+			int rect_length = 2*x_half_length;
+			int base_j = cor_x / rect_length;
+				
+			boolean found = in_circle(x, y, vertex_bounds[first_i][base_j].x, vertex_bounds[first_i][base_j].y, r);
+			if (found)
+			{
+				selected_i = first_i;
+				selected_j = base_j;
+				return;
+			}
+				
+			// if its the last vertex we don't check the other one since it doesn't exist!
+			if (base_j < horz_length - 1)
+			{
+				found = in_circle(x, y, vertex_bounds[second_i][base_j].x, vertex_bounds[second_i][base_j].y, r);
+				if (found)
+				{
+					selected_i = second_i;
+					selected_j = base_j;
+					return;
+				}
+			}
+		}
+		
+		selected_i = -1;
+		selected_j = -1;
+		return;
+	}
+	
+	// tries to find nearest edge using rect collision
+	// x,y - point coordinates
+	// sets selected fields to nearest index
+	// or sets to -1,-1 if none
+	public void find_board_edge(int x, int y)
+	{
+		if (x_half_length == 0 || y_half_length == 0)
+		{
+			return;
+		}
+		
+		int vert_length = vertex_bounds.length;
+		
+		Board board = catan.get_board();
+		Vertex vertices[][] = board.get_vertices();
+		
+		if (rotate)
+		{
+			
+		}
+		else
+		{
+			// standard bounds checkin
+			if (y <= vertex_bounds[0][0].y || y >= vertex_bounds[vert_length - 1][0].y)
+			{
+				selected_i = -1;
+				selected_j = -1;
+				return;
+			}
+			
+			int cor_y = y - vertex_bounds[0][0].y;
+			
+			int base_i = cor_y / (3*y_half_length/2);
+			base_i *= 2;
+			
+			// vertical edges section
+			if (cor_y % (3*y_half_length/2) >= y_half_length/2)
+			{
+				base_i++;
+			}
+			
+			if (base_i >= vert_length)
+			{
+				selected_i = -1;
+				selected_j = -1;
+				return;
+			}
+			
+			// angled edges
+			if (base_i % 2 == 0)
+			{
+				int first_i = base_i + 1;
+				int second_i = base_i;
+				boolean up = true; // edges start by 'pointing' up
+				
+				if (base_i >= vert_length/2) // bottom half of board
+				{
+					first_i = base_i;
+					second_i = base_i + 1;
+					up = false;
+				}
+				
+				int x_left = vertex_bounds[first_i][0].x;
+				int horz_length = vertex_bounds[first_i].length;
+				int x_right = vertex_bounds[first_i][horz_length - 1].x;
+				
+				if (x <= x_left || x >= x_right)
+				{
+					selected_i = -1;
+					selected_j = -1;
+					return;
+				}
+				
+				int cor_x = x - x_left;
+				
+				int base_j = cor_x / (2*x_half_length);
+				
+				Vertex v;
+				Edge e;
+				
+				// second rectangle
+				if (cor_x % (2*x_half_length) >= x_half_length)
+				{
+					if (up)
+					{
+						v = vertices[base_i][base_j];
+						e = v.node_vertex.edges[1].edge;
+					}
+					else
+					{
+						v = vertices[base_i + 1][base_j];
+						e = v.node_vertex.edges[1].edge;
+					}
+				}
+				else // first rectangle
+				{
+					if (up)
+					{
+						v = vertices[base_i + 1][base_j];
+						e = v.node_vertex.edges[1].edge;
+					}
+					else
+					{
+						v = vertices[base_i][base_j];
+						e = v.node_vertex.edges[1].edge;
+					}
+				}
+				
+				int index[] = e.get_index();
+				selected_i = index[0];
+				selected_j = index[1];
+				return;
+			}
+			else // vertical edges
+			{
+				int x_left = vertex_bounds[base_i][0].x - x_half_length;
+				int horz_length = vertex_bounds[base_i].length;
+				int x_right = vertex_bounds[base_i][horz_length - 1].x + x_half_length;
+				
+				if (x <= x_left || x >= x_right)
+				{
+					selected_i = -1;
+					selected_j = -1;
+					return;
+				}
+				
+				int cor_x = x - x_left;
+				
+				int base_j = cor_x / (2*x_half_length);
+				
+				// set selected to the edge in question
+				Vertex v = vertices[base_i][base_j];
+				Edge e = v.node_vertex.edges[2].edge;
+				int[] index = e.get_index();
+				selected_i = index[0];
+				selected_j = index[1];
+				
+				return;
+			}
+		}
+	}
+	
+	// tests if given point is in circle
+	// x,y - point coordinates
+	// x0,y0 - circle center
+	// r - radius of circle
+	public boolean in_circle(double x, double y, double x0, double y0, double r)
+	{
+		return (x0 - x)*(x0 - x) + (y0 - y)*(y0 - y) < r*r;
+	}
+	
 	// tests if the given point is within the triangle based on barycentric method
 	// x,y - point coordinates
 	// x0,y0 - first vertex of triangle
 	// x1,y1 - second vertex of triangle
 	// x2,y2 - third vertex of triangle
-	
 	public boolean in_tri_bary(double x, double y, double x0, double y0, double x1, double y1, double x2, double y2)
 	{
 		double denom = (y1 - y2)*(x0 - x2) + (x2 - x1)*(y0 - y2);
@@ -483,30 +736,6 @@ public class BoardPanel extends JPanel
 		double c = 1 - a - b;
 		
 		return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
-	}
-	
-	public void move_cursor(int d_i, int d_j)
-	{
-		int i = cursor_i + d_i;
-		int j = cursor_j + d_j;
-
-		Board board = catan.get_board();
-		Vertex vertices[][] = board.get_vertices();
-
-		if (i < 0)
-			i = 0;
-		else if (i >= vertices.length)
-			i = vertices.length - 1;
-		
-		if (j < 0)
-			j = 0;
-		else if (j >= vertices[i].length)
-			j = vertices[i].length - 1;
-
-		cursor_i = i;
-		cursor_j = j;
-		
-		repaint();
 	}
 	
 	public void toggleRotate()
@@ -522,10 +751,7 @@ public class BoardPanel extends JPanel
 		
 		Graphics2D g2D = (Graphics2D)g;
 		
-		if (!rotate)
-			draw_board(g2D);
-		else
-			draw_board_nodes(g2D);
+		draw_board(g2D);
 	}
 	
 	// currently only supports reguler and extension boards
@@ -699,8 +925,7 @@ public class BoardPanel extends JPanel
 			{
 				for (int j = 0; j < vertices[i].length; j++)
 				{
-					boolean temp_house = (i == cursor_i && j == cursor_j);
-					drawVertex(g, vertex_bounds[i][j].x, vertex_bounds[i][j].y, vertices[i][j], temp_house);
+					drawVertex(g, vertex_bounds[i][j].x, vertex_bounds[i][j].y, vertices[i][j]);
 				}
 			}
 		}
@@ -830,8 +1055,7 @@ public class BoardPanel extends JPanel
 			{
 				for (int j = 0; j < vertices[i].length; j++)
 				{
-					boolean temp_house = i == cursor_i && j == cursor_j;
-					drawVertex(g, vertex_bounds[i][j].x, vertex_bounds[i][j].y, vertices[i][j], temp_house);
+					drawVertex(g, vertex_bounds[i][j].x, vertex_bounds[i][j].y, vertices[i][j]);
 				}
 			}
 		}
@@ -928,7 +1152,7 @@ public class BoardPanel extends JPanel
 				
 				for (int i = 0; i < 6; i++)
 				{
-					drawVertex(g, bounds[i][0], bounds[i][1], node.vertices[i].vertex, false);
+					drawVertex(g, bounds[i][0], bounds[i][1], node.vertices[i].vertex);
 				}
 				
 				node = node.hexes[2];
@@ -1065,10 +1289,7 @@ public class BoardPanel extends JPanel
 		int index[] = tile.get_index();
 		if (index[0] == hex_selected_i && index[1] == hex_selected_j)
 		{
-			int new_color = Color.RED.getRGB() & ALP_MASK;
-			Color col = new Color(new_color, true);
-			
-			g.setColor(col);
+			g.setColor(TRANS_RED);
 			
 			g.fillPolygon(tri0_x, tri0_y, 3);
 			
@@ -1164,6 +1385,15 @@ public class BoardPanel extends JPanel
 		}
 		
 		g.drawLine(x0,y0,x1,y1);
+		
+		int index[] = edge.get_index();
+		if (selected_i == index[0] && selected_j == index[1])
+		{
+			g.setColor(TRANS_RED);
+			g.setStroke(new BasicStroke(edge_width + 2));
+			
+			g.drawLine(x0,y0,x1,y1);
+		}
 	}
 	
 	// drawing houses/cities
@@ -1171,20 +1401,13 @@ public class BoardPanel extends JPanel
 	// x0 - x coord of vertex
 	// y0 - y coord of vertex
 	// vertex - house, city, port info
-	// temp_house - if this is the cursor location
-	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex, boolean temp_house)
+	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex)
 	{	
 		int player = vertex.get_player();
 		int type = vertex.get_type();
 		int port = vertex.get_port();
 		
-		if (temp_house)
-		{
-			int new_color = player_col[player_selected].getRGB() & ALP_MASK;
-			Color col = new Color(new_color, true);
-			drawHouse(g, x0, y0, (int)(house_width*1.5), col);
-		}
-		else if (player > -1)
+		if (player > -1)
 		{
 			if (type == 0)
 			{
@@ -1198,6 +1421,16 @@ public class BoardPanel extends JPanel
 		else // draw little black circle to mask road endings
 		{
 			g.setColor(Color.BLACK);
+			g.fillOval(x0 - house_width, y0 - house_width, 2*house_width, 2*house_width);
+		}
+		
+		int index[] = vertex.get_index();
+		
+		// if this is currently selected draw transparent red over it
+		if (selected_i == index[0] && selected_j == index[1])
+		{
+			g.setColor(TRANS_RED);
+			
 			g.fillOval(x0 - house_width, y0 - house_width, 2*house_width, 2*house_width);
 		}
 	}
