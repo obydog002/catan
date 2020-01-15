@@ -19,7 +19,7 @@ public class InputHandler implements MouseListener, ActionListener, MouseMotionL
 		this.board_options_panel.setListeners(this);
 	}
 	
-	// mouse presses
+	// mouse listener
 	// -----------------------------------------
 	
 	public void mousePressed(MouseEvent e)
