@@ -30,7 +30,7 @@ projected finish: 28/1/2019
 			- tiles													DONE 14/1/2020
 			- vertices												DONE 15/1/2020
 			- edges													DONE 15/1/2020
-			- handle rotation	
+			- handle rotation										DONE 16/1/2020
 			- testing 												
 			- comprhensive bounds checking in all methods
 	- draw both board types, scaling, rotate						DONE 19/12/2019
@@ -47,7 +47,7 @@ projected finish: 28/1/2019
 			- roads													DONE 20/12/2019
 		- tokens 													DONE 19/12/2019
 		- ports
-	- options panel and other panels								DONE 1/1/2020
+	- options panel and other panels								
 		- options													DONE 1/1/2020
 		- rewrite option panel so it looks better
 			- remove modes 2 and 3
