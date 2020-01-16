@@ -32,6 +32,7 @@ projected finish: 28/1/2019
 			- edges													DONE 15/1/2020
 			- handle rotation	
 			- testing 												
+			- comprhensive bounds checking in all methods
 	- draw both board types, scaling, rotate						DONE 19/12/2019
 		- hexes reg													DONE 17/12/2019
 		- hexes ext													DONE 17/12/2019
