@@ -56,7 +56,7 @@ public class CatanEngine implements Catan
 			board.set_ext_hex(length);
 		}
 		
-		board.test_randomize_all();
+		//board.test_randomize_all();
 		
 		board.initialize_nodes_normal();
 		
