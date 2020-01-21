@@ -6,7 +6,6 @@ import java.awt.*;
 
 public class BoardOptionsPanel extends JPanel
 {
-
     private JButton up;
     private JButton down;
     private JButton left;
