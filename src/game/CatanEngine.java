@@ -5,11 +5,16 @@ import java.util.Random;
 import java.awt.Color;
 
 import src.gui.GameData;
+
+import src.game.engine.State;
+
 import src.agent.*;
+
+// handles game and validation
 
 public class CatanEngine implements Catan
 {
-	private static Random rng;
+	private Random rng;
 	
 	Board board = null;
 		
@@ -17,14 +22,23 @@ public class CatanEngine implements Catan
 	
 	private GameData game_data;
 
-	public CatanEngine(long seed)
-	{
-		super();
-		rng = new Random(seed);
-	}
+	// state of the game
+	// 0 - determine start order of players
+	// 1 - initial placement of houses/roads
+	// 2 - special building (if enabled)
+	// 3 - current player roll dice 
+	// 4 - pick-up/discard/move-robber
+	// 5 - player turn: building/buy dev cards, trading (including ports), playing dev cards
+	// used to make sure flow of the game is followed properly
+	private int current_state;
 	
-	public CatanEngine(GameData game_data)
+	// object to contain board and player info and to validate majority of moves
+	private State state;
+	
+	public CatanEngine(GameData game_data, Random rng)
 	{
+		this.rng = rng;
+		
 		this.game_data = game_data;
 		this.board = new Board();
 		
@@ -35,7 +49,7 @@ public class CatanEngine implements Catan
 
 	public void set_player_order()
 	{
-
+		
 	} 
 
 	// singular dice roll
