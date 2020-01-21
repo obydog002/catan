@@ -3,7 +3,7 @@ projected finish: 28/1/2019
 
 - General 
 	- rework/clean up gui
-	- consolidate random instances to static in CatanMain
+	- consolidate random instances to static in CatanMain			DONE 21/1/2020
 	- create graph based structure for board DS						DONE 6/1/2020
 	- testing of board DS											DONE 8/1/2020						
 		- test by drawing											DONE 7/1/2020
@@ -58,7 +58,7 @@ projected finish: 28/1/2019
 		- start screen
 - Game
 	- game logic
-		- store initial game configs for reg, ext boards
+		- store initial game configs for reg, ext boards			
 		- special building option
 		- validate settlement/city/road building
 		- omnipresent mode (Engine)

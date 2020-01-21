@@ -38,9 +38,9 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 	
 	private static int player_amount = -1;
 	
-	public PlayerOptionPanel(int player_num, int initial_color, boolean team_enabled, boolean starting_enabled)
+	public PlayerOptionPanel(int player_num, int initial_color, boolean team_enabled, boolean starting_enabled, Random rng)
 	{
-		rng = new Random();
+		this.rng = rng;
 		
 		this.player_num = player_num;
 		

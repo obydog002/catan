@@ -22,7 +22,9 @@ public class CatanMain
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		OptionsPanel options = new OptionsPanel(frame);
+		long seed = 1;
+		
+		OptionsPanel options = new OptionsPanel(frame, seed);
 		frame.add(options);
 		
 		frame.pack();

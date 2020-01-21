@@ -40,7 +40,7 @@ public class BoardPanel extends JPanel
 	// initial height
 	public static final int BOARD_HEIGHT = 500;
 	
-	static Random rng = new Random();
+	private Random rng;
 	
 	// rotate the board by 90 degrees
 	private boolean rotate = false;
@@ -50,9 +50,19 @@ public class BoardPanel extends JPanel
 	
 	private static Color player_col[];
 	
+	int sschiuco = 0;
+	
 	// refers to which hex, vertex or edge the mouse closest to 
-	private int selected_i, selected_j;
+	// for mouse selection only
+	// hex coordinates
+	private int hex_selected_i, hex_selected_j;
 
+	// vertex coords
+	private int vertex_selected_i, vertex_selected_j;
+	
+	// edge coords
+	private int edge_selected_i, edge_selected_j;
+	
 	// mouse coordinates
 	private int mouse_x, mouse_y;
 	
@@ -146,17 +156,25 @@ public class BoardPanel extends JPanel
 		return result;
 	}
 	
-	public BoardPanel(GameData game_data)
+	public BoardPanel(GameData game_data, Random rng)
 	{
-		selected_i = -1;
-		selected_j = -1;
+		this.rng = rng;
+		
+		hex_selected_i = -1;
+		hex_selected_j = -1;
+		
+		vertex_selected_i = -1;
+		vertex_selected_j = -1;
+		
+		edge_selected_i = -1;
+		edge_selected_j = -1;
 		
 		player_selected = 0;
 
 		Dimension pref = new Dimension(BOARD_WIDTH + 2*BOARD_WIDTH_MARGIN, BOARD_HEIGHT + BOARD_HEIGHT_MARGIN_TOP + BOARD_HEIGHT_MARGIN_BOTTOM);
 		this.setPreferredSize(pref);
 		
-		catan = new CatanEngine(game_data);
+		catan = new CatanEngine(game_data, rng);
 		
 		player_col = catan.get_player_colors();
 		
@@ -196,13 +214,16 @@ public class BoardPanel extends JPanel
 		this.mouse_x = x;
 		this.mouse_y = y;
 		
-		//find_board_hex(x, y);
-		//find_board_vertex(x, y);
-		find_board_edge(x,y);
+		if (sschiuco == 0)
+			find_board_hex(x, y);
+		else if (sschiuco == 1)
+			find_board_vertex(x, y);
+		else
+			find_board_edge(x,y);
 		
-		repaint();	
+		repaint();
 	}
-	
+
 	// will try to find the nearest hex to the coordinates supplied on the board
 	// x,y - point coordinates
 	// sets the hex_selected fields to nearest
@@ -224,16 +245,16 @@ public class BoardPanel extends JPanel
 		// out of x bounds
 		if (x <= BOARD_WIDTH_MARGIN || x >= log_width + BOARD_WIDTH_MARGIN)
 		{
-			selected_i = -1;
-			selected_j = -1;
+			hex_selected_i = -1;
+			hex_selected_j = -1;
 			return;
 		}
 		
 		// similarily y bounds
 		if (y <= BOARD_HEIGHT_MARGIN_TOP || y >= log_height + BOARD_HEIGHT_MARGIN_TOP)
 		{
-			selected_i = -1;
-			selected_j = -1;
+			hex_selected_i = -1;
+			hex_selected_j = -1;
 			return;
 		}
 		
@@ -254,8 +275,8 @@ public class BoardPanel extends JPanel
 			
 			if (base_i >= vert_length - 1)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				hex_selected_i = -1;
+				hex_selected_j = -1;
 				return;
 			}
 			
@@ -280,8 +301,8 @@ public class BoardPanel extends JPanel
 				
 				if (cor_y <= y_top || cor_y >= y_bot)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					hex_selected_i = -1;
+					hex_selected_j = -1;
 					return;
 				}
 				
@@ -306,8 +327,8 @@ public class BoardPanel extends JPanel
 						Vertex v = vertices[second_i][base_j];
 						Tile t = v.node_vertex.hexes[2].tile;
 						int index[] = t.get_index();
-						selected_i = index[0];
-						selected_j = index[1];
+						hex_selected_i = index[0];
+						hex_selected_j = index[1];
 						return;
 					}
 					else
@@ -315,8 +336,8 @@ public class BoardPanel extends JPanel
 						Vertex v = vertices[second_i][base_j];
 						Tile t = v.node_vertex.hexes[1].tile;
 						int index[] = t.get_index();
-						selected_i = index[0];
-						selected_j = index[1];
+						hex_selected_i = index[0];
+						hex_selected_j = index[1];
 						return;
 					}
 				}
@@ -338,8 +359,8 @@ public class BoardPanel extends JPanel
 								Vertex v = vertices[first_i][base_j];
 								Tile t = v.node_vertex.hexes[1].tile;
 								int index[] = t.get_index();
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -354,8 +375,8 @@ public class BoardPanel extends JPanel
 								Vertex v = vertices[first_i][base_j];
 								Tile t = v.node_vertex.hexes[2].tile;
 								int index[] = t.get_index();
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -375,8 +396,8 @@ public class BoardPanel extends JPanel
 								Vertex v = vertices[first_i][base_j + 1];
 								Tile t = v.node_vertex.hexes[1].tile;
 								int index[] = t.get_index();
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -391,8 +412,8 @@ public class BoardPanel extends JPanel
 								Vertex v = vertices[first_i][base_j + 1];
 								Tile t = v.node_vertex.hexes[2].tile;
 								int index[] = t.get_index();
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -407,8 +428,8 @@ public class BoardPanel extends JPanel
 				
 				if (cor_y <= y_top || cor_y >= y_bot)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					hex_selected_i = -1;
+					hex_selected_j = -1;
 					return;
 				}
 				
@@ -419,8 +440,8 @@ public class BoardPanel extends JPanel
 				Vertex v = vertices[base_i][base_j];
 				Tile t = v.node_vertex.hexes[2].tile;
 				int index[] = t.get_index();
-				selected_i = index[0];
-				selected_j = index[1];
+				hex_selected_i = index[0];
+				hex_selected_j = index[1];
 				return;
 			}
 		}
@@ -442,8 +463,8 @@ public class BoardPanel extends JPanel
 			// stop from trying to collision check non existent rectangle at bottom
 			if (base_i >= vert_length - 1)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				hex_selected_i = -1;
+				hex_selected_j = -1;
 				return;
 			}
 			
@@ -461,8 +482,8 @@ public class BoardPanel extends JPanel
 					// outside the boundries so no point checking
 					if (cor_x <= x_left || cor_x >= x_right)
 					{
-						selected_i = -1;
-						selected_j = -1;
+						hex_selected_i = -1;
+						hex_selected_j = -1;
 						return;
 					}
 					
@@ -484,8 +505,8 @@ public class BoardPanel extends JPanel
 						Tile t = v.node_vertex.hexes[2].tile;
 						int[] index = t.get_index();
 						
-						selected_i = index[0];
-						selected_j = index[1];
+						hex_selected_i = index[0];
+						hex_selected_j = index[1];
 						return;
 					}
 					
@@ -507,8 +528,8 @@ public class BoardPanel extends JPanel
 								Tile t = v.node_vertex.hexes[0].tile;
 								int[] index = t.get_index();
 								
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -526,8 +547,8 @@ public class BoardPanel extends JPanel
 								Tile t = v.node_vertex.hexes[1].tile;
 								int[] index = t.get_index();
 								
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -542,8 +563,8 @@ public class BoardPanel extends JPanel
 					// outside the boundries so no point checking
 					if (cor_x <= x_left || cor_x >= x_right)
 					{
-						selected_i = -1;
-						selected_j = -1;
+						hex_selected_i = -1;
+						hex_selected_j = -1;
 						return;
 					}
 					
@@ -565,8 +586,8 @@ public class BoardPanel extends JPanel
 						Tile t = v.node_vertex.hexes[1].tile;
 						int[] index = t.get_index();
 						
-						selected_i = index[0];
-						selected_j = index[1];
+						hex_selected_i = index[0];
+						hex_selected_j = index[1];
 						return;
 					}
 					
@@ -588,8 +609,8 @@ public class BoardPanel extends JPanel
 								Tile t = v.node_vertex.hexes[0].tile;
 								int[] index = t.get_index();
 								
-								selected_i = index[0];
-								selected_j = index[1];			
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];			
 								return;
 							}
 						}
@@ -607,8 +628,8 @@ public class BoardPanel extends JPanel
 								Tile t = v.node_vertex.hexes[2].tile;
 								int[] index = t.get_index();
 								
-								selected_i = index[0];
-								selected_j = index[1];
+								hex_selected_i = index[0];
+								hex_selected_j = index[1];
 								return;
 							}
 						}
@@ -624,8 +645,8 @@ public class BoardPanel extends JPanel
 				// bounds checking again
 				if (cor_x <= x_left || cor_x >= x_right)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					hex_selected_i = -1;
+					hex_selected_j = -1;
 					return;
 				}
 				
@@ -638,14 +659,14 @@ public class BoardPanel extends JPanel
 				Tile t = v.node_vertex.hexes[2].tile;
 				int[] index = t.get_index();
 				
-				selected_i = index[0];
-				selected_j = index[1];		
+				hex_selected_i = index[0];
+				hex_selected_j = index[1];		
 				return;	
 			}
 		}
 		
-		selected_i = -1;
-		selected_j = -1;
+		hex_selected_i = -1;
+		hex_selected_j = -1;
 		return;
 	}
 	
@@ -677,8 +698,8 @@ public class BoardPanel extends JPanel
 			// x bounds checking
 			if (x <= vertex_bounds[vert_length - 1][0].x - x_half_length/2 || x >= vertex_bounds[0][0].x + x_half_length/2)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				vertex_selected_i = -1;
+				vertex_selected_j = -1;
 				return;
 			}
 			
@@ -689,8 +710,8 @@ public class BoardPanel extends JPanel
 			
 			if (base_i >= vert_length)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				vertex_selected_i = -1;
+				vertex_selected_j = -1;
 				return;
 			}
 			
@@ -710,8 +731,8 @@ public class BoardPanel extends JPanel
 			
 			if (y <= top_y || y >= bot_y)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				vertex_selected_i = -1;
+				vertex_selected_j = -1;
 				return;
 			}
 			
@@ -722,8 +743,8 @@ public class BoardPanel extends JPanel
 			boolean found = in_circle(x, y, vertex_bounds[first_i][base_j].x, vertex_bounds[first_i][base_j].y, r);
 			if (found)
 			{
-				selected_i = first_i;
-				selected_j = base_j;
+				vertex_selected_i = first_i;
+				vertex_selected_j = base_j;
 				return;
 			}
 				
@@ -733,8 +754,8 @@ public class BoardPanel extends JPanel
 				found = in_circle(x, y, vertex_bounds[second_i][base_j].x, vertex_bounds[second_i][base_j].y, r);
 				if (found)
 				{
-					selected_i = second_i;
-					selected_j = base_j;
+					vertex_selected_i = second_i;
+					vertex_selected_j = base_j;
 					return;
 				}
 			}
@@ -751,8 +772,8 @@ public class BoardPanel extends JPanel
 			// bounds checking for y
 			if (y <= vertex_bounds[0][0].y - y_half_length/2 || y >= vertex_bounds[vert_length - 1][0].y + y_half_length/2)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				vertex_selected_i = -1;
+				vertex_selected_j = -1;
 				return;
 			}
 			
@@ -763,8 +784,8 @@ public class BoardPanel extends JPanel
 			
 			if (base_i >= vert_length)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				vertex_selected_i = -1;
+				vertex_selected_j = -1;
 				return;
 			}
 			
@@ -786,8 +807,8 @@ public class BoardPanel extends JPanel
 			// x bounds checking
 			if (x <= x_left || x >= x_right)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				vertex_selected_i = -1;
+				vertex_selected_j = -1;
 				return;
 			}
 				
@@ -798,8 +819,8 @@ public class BoardPanel extends JPanel
 			boolean found = in_circle(x, y, vertex_bounds[first_i][base_j].x, vertex_bounds[first_i][base_j].y, r);
 			if (found)
 			{
-				selected_i = first_i;
-				selected_j = base_j;
+				vertex_selected_i = first_i;
+				vertex_selected_j = base_j;
 				return;
 			}
 				
@@ -809,15 +830,15 @@ public class BoardPanel extends JPanel
 				found = in_circle(x, y, vertex_bounds[second_i][base_j].x, vertex_bounds[second_i][base_j].y, r);
 				if (found)
 				{
-					selected_i = second_i;
-					selected_j = base_j;
+					vertex_selected_i = second_i;
+					vertex_selected_j = base_j;
 					return;
 				}
 			}
 		}
 		
-		selected_i = -1;
-		selected_j = -1;
+		vertex_selected_i = -1;
+		vertex_selected_j = -1;
 		return;
 	}
 	
@@ -841,8 +862,8 @@ public class BoardPanel extends JPanel
 		{
 			if (x <= vertex_bounds[vert_length - 1][0].x || x >= vertex_bounds[0][0].x)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				edge_selected_i = -1;
+				edge_selected_j = -1;
 				return;
 			}
 			
@@ -859,8 +880,8 @@ public class BoardPanel extends JPanel
 			
 			if (base_i >= vert_length - 1)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				edge_selected_i = -1;
+				edge_selected_j = -1;
 				return;
 			}
 			
@@ -884,8 +905,8 @@ public class BoardPanel extends JPanel
 				
 				if (y <= y_top || y >= y_bot)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					edge_selected_i = -1;
+					edge_selected_j = -1;
 					return;
 				}
 				
@@ -925,8 +946,8 @@ public class BoardPanel extends JPanel
 				}
 				
 				int index[] = e.get_index();
-				selected_i = index[0];
-				selected_j = index[1];
+				edge_selected_i = index[0];
+				edge_selected_j = index[1];
 				return;
 			}
 			else
@@ -938,8 +959,8 @@ public class BoardPanel extends JPanel
 				// chicken
 				if (y <= y_top || y >= y_bot)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					edge_selected_i = -1;
+					edge_selected_j = -1;
 					return;
 				}
 				
@@ -950,16 +971,16 @@ public class BoardPanel extends JPanel
 				// czechoslovakia
 				if (base_j >= y_length)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					edge_selected_i = -1;
+					edge_selected_j = -1;
 					return;
 				}
 				
 				Vertex v = vertices[base_i][base_j];
 				Edge e = v.node_vertex.edges[2].edge;
 				int[] index = e.get_index();
-				selected_i = index[0];
-				selected_j = index[1];
+				edge_selected_i = index[0];
+				edge_selected_j = index[1];
 				return;
 			}
 		}
@@ -968,8 +989,8 @@ public class BoardPanel extends JPanel
 			// standard bounds checkin
 			if (y <= vertex_bounds[0][0].y || y >= vertex_bounds[vert_length - 1][0].y)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				edge_selected_i = -1;
+				edge_selected_j = -1;
 				return;
 			}
 			
@@ -986,8 +1007,8 @@ public class BoardPanel extends JPanel
 			
 			if (base_i >= vert_length - 1)
 			{
-				selected_i = -1;
-				selected_j = -1;
+				edge_selected_i = -1;
+				edge_selected_j = -1;
 				return;
 			}
 			
@@ -1011,8 +1032,8 @@ public class BoardPanel extends JPanel
 				
 				if (x <= x_left || x >= x_right)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					edge_selected_i = -1;
+					edge_selected_j = -1;
 					return;
 				}
 				
@@ -1052,8 +1073,8 @@ public class BoardPanel extends JPanel
 				}
 				
 				int index[] = e.get_index();
-				selected_i = index[0];
-				selected_j = index[1];
+				edge_selected_i = index[0];
+				edge_selected_j = index[1];
 				return;
 			}
 			else // vertical edges
@@ -1064,8 +1085,8 @@ public class BoardPanel extends JPanel
 				
 				if (x <= x_left || x >= x_right)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					edge_selected_i = -1;
+					edge_selected_j = -1;
 					return;
 				}
 				
@@ -1076,8 +1097,8 @@ public class BoardPanel extends JPanel
 				// can never be too careful with bounds checking
 				if (base_j >= horz_length)
 				{
-					selected_i = -1;
-					selected_j = -1;
+					edge_selected_i = -1;
+					edge_selected_j = -1;
 					return;
 				}
 				
@@ -1085,8 +1106,8 @@ public class BoardPanel extends JPanel
 				Vertex v = vertices[base_i][base_j];
 				Edge e = v.node_vertex.edges[2].edge;
 				int[] index = e.get_index();
-				selected_i = index[0];
-				selected_j = index[1];
+				edge_selected_i = index[0];
+				edge_selected_j = index[1];
 				
 				return;
 			}
@@ -1119,7 +1140,9 @@ public class BoardPanel extends JPanel
 	
 	public void toggleRotate()
 	{
-		rotate = !rotate;
+		sschiuco++;
+		if (sschiuco == 3)
+			sschiuco = 0;
 		
 		repaint();
 	}
@@ -1666,7 +1689,7 @@ public class BoardPanel extends JPanel
 		
 		// if this is the selected tile draw transparent red over it
 		int index[] = tile.get_index();
-		if (index[0] == selected_i && index[1] == selected_j)
+		if (hex_selected_i == index[0] && hex_selected_j == index[1])
 		{
 			g.setColor(TRANS_RED);
 			
@@ -1766,7 +1789,7 @@ public class BoardPanel extends JPanel
 		g.drawLine(x0,y0,x1,y1);
 		
 		int index[] = edge.get_index();
-		if (selected_i == index[0] && selected_j == index[1])
+		if (edge_selected_i == index[0] && edge_selected_j == index[1])
 		{
 			g.setColor(TRANS_RED);
 			g.setStroke(new BasicStroke(edge_width + 2));
@@ -1806,7 +1829,7 @@ public class BoardPanel extends JPanel
 		int index[] = vertex.get_index();
 		
 		// if this is currently selected draw transparent red over it
-		if (selected_i == index[0] && selected_j == index[1])
+		if (vertex_selected_i == index[0] && vertex_selected_j == index[1])
 		{
 			g.setColor(TRANS_RED);
 			

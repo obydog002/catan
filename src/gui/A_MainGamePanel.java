@@ -2,15 +2,16 @@ package src.gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Random;
 
 public class A_MainGamePanel extends JPanel
 {
-    public A_MainGamePanel(JFrame frame, GameData game_data)
+    public A_MainGamePanel(JFrame frame, GameData game_data, Random rng)
     {
 		frame.getContentPane().removeAll();
 
         setLayout(new GridLayout(1,0));
-        BoardPanel board = new BoardPanel(game_data);
+        BoardPanel board = new BoardPanel(game_data, rng);
         JPanel side_panel = new JPanel();
         GameInfoPanel game_info = new GameInfoPanel(game_data);
 		BoardOptionsPanel options_panel = new BoardOptionsPanel();

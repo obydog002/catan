@@ -60,12 +60,12 @@ public class OptionsPanel extends JPanel implements ActionListener
 	
 	private GameData game_data;
 	
-	public OptionsPanel(JFrame frame)
+	public OptionsPanel(JFrame frame, long seed)
 	{
 		this.frame = frame;
 		this.game_data = new GameData();
 		
-		rng = new Random();
+		rng = new Random(seed);
 		
 		this.setPreferredSize(new Dimension(700, 400));
 		setLayout(new GridLayout(1,0));
@@ -313,7 +313,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 					else
 						initial_color = rng.nextInt(POWER2_24) + 0xFF000000;
 					
-					player_options_array[i] = new PlayerOptionPanel(i + 1, initial_color, team_enabled, starting_enabled);
+					player_options_array[i] = new PlayerOptionPanel(i + 1, initial_color, team_enabled, starting_enabled, rng);
 					player_select_panel.add(player_options_array[i]);
 				}
 				
@@ -404,7 +404,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 	public void create_game_panels()
 	{
 		removeAll();
-		A_MainGamePanel MainPanel = new A_MainGamePanel(frame, game_data);
+		A_MainGamePanel MainPanel = new A_MainGamePanel(frame, game_data, rng);
 	}
 	
 	// takes the input and checks:
