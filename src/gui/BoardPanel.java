@@ -207,6 +207,7 @@ public class BoardPanel extends JPanel
 			}
 		} 
 		
+		input = new InputHandler(this);
 	}
 	
 	public void update_mouse_location(int x, int y)
