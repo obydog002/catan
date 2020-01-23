@@ -2,12 +2,12 @@ package src.gui;
 
 // a class to hold game data, like amount of players, board size, and so on....
 // engine_mode - engine or observer
-// game_mode - what type of game it is (0 - 4 player catan, 1 - extension, 2 - variable normal, 3 - variable ext)
+// game_mode - what type of game it is (0 - 4 player catan, 1 - extension)
 // board_size - size of board
 // players_amount - how many players are there
 // special_building_enabled - whether there is special building enabled
 // team_enabled - whether there are teams
-// starting_enabled - whether the players have decided starting order before hand
+// starting_enabled - whether the players have decided starting order beforehand
 // types - player types array
 // names - player name array
 // colors - player colors array
@@ -37,6 +37,7 @@ public class GameData
 	
 	public int teams[];
 	
+	// positions that the player start in, not a smart way to name but whatever
 	public int poses[];
 
 	public String toString()
