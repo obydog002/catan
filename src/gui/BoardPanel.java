@@ -50,8 +50,6 @@ public class BoardPanel extends JPanel
 	
 	private static Color player_col[];
 	
-	int sschiuco = 0;
-	
 	// refers to which hex, vertex or edge the mouse closest to 
 	// for mouse selection only
 	// hex coordinates
@@ -214,13 +212,6 @@ public class BoardPanel extends JPanel
 	{
 		this.mouse_x = x;
 		this.mouse_y = y;
-		
-		if (sschiuco == 0)
-			find_board_hex(x, y);
-		else if (sschiuco == 1)
-			find_board_vertex(x, y);
-		else
-			find_board_edge(x,y);
 		
 		repaint();
 	}
@@ -1137,15 +1128,6 @@ public class BoardPanel extends JPanel
 		double c = 1 - a - b;
 		
 		return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
-	}
-	
-	public void toggleRotate()
-	{
-		sschiuco++;
-		if (sschiuco == 3)
-			sschiuco = 0;
-		
-		repaint();
 	}
 	
 	public void paintComponent(Graphics g)

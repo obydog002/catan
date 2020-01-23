@@ -40,7 +40,7 @@ public class InputHandler implements MouseListener, ActionListener, MouseMotionL
 	
 	public void mouseClicked(MouseEvent e)
 	{
-		panel.toggleRotate();
+		
 	}
 
 	// mouse motion listener
