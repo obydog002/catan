@@ -82,7 +82,7 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 		}
 		
 		this.setLayout(new GridLayout(1,0));
-		
+
 		this.add(type);
 		this.add(name);
 		this.add(color_box);
