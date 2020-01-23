@@ -404,7 +404,46 @@ public class OptionsPanel extends JPanel implements ActionListener
 	public void create_game_panels()
 	{
 		removeAll();
-		A_MainGamePanel MainPanel = new A_MainGamePanel(frame, game_data, rng);
+		
+		frame.getContentPane().removeAll();
+		
+		frame.setVisible(false);
+		
+		JPanel main_panel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		BoardSetupPanel setup_panel = new BoardSetupPanel();
+		c.weightx = 0;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.NONE;
+		c.gridx = 0;
+		c.gridy = 0;
+		main_panel.add(setup_panel, c);
+		
+		BoardPanel board_panel = new BoardPanel(game_data, rng);
+		c.fill = GridBagConstraints.BOTH;
+		c.gridx = 1;
+		c.gridwidth = 3;
+		c.weightx = 1;
+		c.weighty = 1;
+		main_panel.add(board_panel, c);
+		
+		JPanel test1 = new JPanel();
+		c.fill = GridBagConstraints.NONE;
+		c.gridx = 4;
+		c.gridwidth = 1;
+		c.weightx = 0;
+		c.weighty = 0;
+		main_panel.add(test1, c);
+		
+		frame.add(main_panel);
+		
+		frame.setLocationRelativeTo(null);
+		
+		frame.revalidate();
+		frame.pack();
+		frame.setVisible(true);
+		frame.repaint();
 	}
 	
 	// takes the input and checks:
