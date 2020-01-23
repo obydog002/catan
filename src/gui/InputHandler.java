@@ -7,16 +7,12 @@ import javax.swing.*;
 public class InputHandler implements MouseListener, ActionListener, MouseMotionListener
 {
 	BoardPanel panel;
-	BoardOptionsPanel board_options_panel;
 
-	public InputHandler(BoardPanel panel, BoardOptionsPanel board_options_panel)
+	public InputHandler(BoardPanel panel)
 	{
 		this.panel = panel;
 		this.panel.addMouseListener(this);
 		this.panel.addMouseMotionListener(this);
-		
-		this.board_options_panel = board_options_panel;
-		this.board_options_panel.setListeners(this);
 	}
 	
 	// mouse listener
