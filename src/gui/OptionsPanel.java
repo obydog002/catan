@@ -23,7 +23,8 @@ public class OptionsPanel extends JPanel implements ActionListener
 	
 	// parent frame
 	private JFrame frame;
-	
+
+	// panels and textfields for the headers
 	private JPanel player_scroll_header;
 	private JTextField type_header;
 	private JTextField name_header;
@@ -76,7 +77,6 @@ public class OptionsPanel extends JPanel implements ActionListener
 		options[1] = new JPanel(new GridLayout(0,1));
 		options[2] = new JPanel(new GridLayout(0,1));
 		
-		player_scroll_header = new JPanel(new GridLayout(1,0));
 		type_header = new JTextField("type of player");
 		type_header.setEditable(false);
 		name_header = new JTextField("name of player");
@@ -90,12 +90,14 @@ public class OptionsPanel extends JPanel implements ActionListener
 		starting_header = new JTextField("starting number");
 		starting_header.setEditable(false);
 		
+		player_scroll_header = new JPanel(new GridLayout(1,0));
 		player_scroll_header.add(type_header);
 		player_scroll_header.add(name_header);
 		player_scroll_header.add(color_header);
 		player_scroll_header.add(color_picker_header);
 		player_scroll_header.add(team_header);
 		player_scroll_header.add(starting_header);
+		
 		player_select_panel = new JPanel(new GridLayout(0,1));	
 		
 		engine = new JRadioButton("engine");	
@@ -412,29 +414,32 @@ public class OptionsPanel extends JPanel implements ActionListener
 		JPanel main_panel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		
-		BoardSetupPanel setup_panel = new BoardSetupPanel();
-		c.weightx = 0;
+		boolean reg_game = (game_data.game_mode == 0 && game_data.board_size == 3) || (game_data.game_mode == 1 && game_data.board_size == 4);
+
+		BoardSetupPanel setup_panel = new BoardSetupPanel(reg_game);
+		c.weightx = 0.2;
 		c.weighty = 0;
-		c.fill = GridBagConstraints.NONE;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		main_panel.add(setup_panel, c);
 		
 		BoardPanel board_panel = new BoardPanel(game_data, rng);
 		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 1;
+		c.gridx = 2;
 		c.gridwidth = 3;
 		c.weightx = 1;
 		c.weighty = 1;
 		main_panel.add(board_panel, c);
 		
-		JPanel test1 = new JPanel();
-		c.fill = GridBagConstraints.NONE;
-		c.gridx = 4;
-		c.gridwidth = 1;
-		c.weightx = 0;
+		BoardSetupPanel test = new BoardSetupPanel(!reg_game);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 5;
+		c.gridwidth = 2;
+		c.weightx = 0.2;
 		c.weighty = 0;
-		main_panel.add(test1, c);
+		main_panel.add(test, c);
 		
 		frame.add(main_panel);
 		
