@@ -4,6 +4,8 @@ import java.awt.Color;
 
 import src.agent.*;
 
+import src.gui.BoardSetupData;
+
 // either game engine or game observer
 // essentially the difference is that the game engine simulates dice rolls, handles trades between players,
 // does stealing from robber, validates building costs from resources, dev cards etc..
@@ -18,5 +20,5 @@ public interface Catan
 	
 	public Color[] get_player_colors();
 	
-	public void reset_board();
+	public void generate_board(BoardSetupData setup);
 }

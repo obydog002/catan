@@ -5,6 +5,7 @@ import java.util.Random;
 import java.awt.Color;
 
 import src.gui.GameData;
+import src.gui.BoardSetupData;
 
 import src.game.engine.State;
 
@@ -40,7 +41,7 @@ public class CatanEngine implements Catan
 		this.rng = rng;
 		
 		this.game_data = game_data;
-		this.board = new Board();
+		this.board = new Board(rng);
 		
 		agents = new Agent[game_data.players_amount];
 		
@@ -70,10 +71,9 @@ public class CatanEngine implements Catan
 			board.set_ext_hex(length);
 		}
 		
-		//board.test_randomize_all();
-		
 		board.initialize_nodes_normal();
 		
+		// this will need to change eventually
 		for (int i = 0; i < agents.length; i++)
 		{
 			agents[i] = new HumanAgent(new Color(game_data.colors[i]));
@@ -100,14 +100,26 @@ public class CatanEngine implements Catan
 	// reset method for testing
 	// if its regular catan 4-player or 6 it will use the standard setups
 	// otherwise it generates randomly using test_randomize_all
-	public void reset_board()
+	public void generate_board(BoardSetupData setup)
 	{
-		if (board.get_type() == 0 && board.get_length() == 3)
-			board.set_board(Config.REG_TILES, Config.REG_TOKENS, true);
-		else if (board.get_type() == 1 && board.get_length() == 4)
-			board.set_board(Config.EXT_TILES, Config.EXT_TOKENS, true);
-		else
-			board.test_randomize_all();
+		if (setup.regular_game)
+		{
+			// regular 3-catan
+			if (game_data.game_mode == 0)
+			{
+				board.set_board(Config.REG_TILES, Config.REG_TOKENS, setup.rule6_8);
+			}
+			else // 4-ext
+			{
+				board.set_board(Config.EXT_TILES, Config.EXT_TOKENS, setup.rule6_8);
+			}
+		}
+		else 
+		{
+			int tile_setup[] = board.get_tile_setup();
+			int token[] = board.get_token_setup(tile_setup[5]);
+			board.set_board(tile_setup, token, setup.rule6_8);
+		}
 	}
 
 }
