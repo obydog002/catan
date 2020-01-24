@@ -416,28 +416,29 @@ public class OptionsPanel extends JPanel implements ActionListener
 		
 		boolean reg_game = (game_data.game_mode == 0 && game_data.board_size == 3) || (game_data.game_mode == 1 && game_data.board_size == 4);
 
-		BoardSetupPanel setup_panel = new BoardSetupPanel(reg_game);
-		c.weightx = 0.2;
+		BoardPanel board_panel = new BoardPanel(game_data, rng);
+		
+		BoardSetupPanel setup_panel = new BoardSetupPanel(reg_game, board_panel);
+		c.weightx = 0;
 		c.weighty = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
 		main_panel.add(setup_panel, c);
 		
-		BoardPanel board_panel = new BoardPanel(game_data, rng);
 		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 2;
+		c.gridx = 1;
 		c.gridwidth = 3;
 		c.weightx = 1;
 		c.weighty = 1;
 		main_panel.add(board_panel, c);
 		
-		BoardSetupPanel test = new BoardSetupPanel(!reg_game);
+		JPanel test = new JPanel();
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 5;
-		c.gridwidth = 2;
-		c.weightx = 0.2;
+		c.gridx = 4;
+		c.gridwidth = 1;
+		c.weightx = 0;
 		c.weighty = 0;
 		main_panel.add(test, c);
 		
