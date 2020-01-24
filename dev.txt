@@ -1,5 +1,6 @@
 Started: 19/11/2019
 projected finish: 28/1/2019
+next project finish: 27/2/2019 (MARKED 24/1/2020)
 
 - General 
 	- rework/clean up gui
@@ -9,7 +10,8 @@ projected finish: 28/1/2019
 		- test by drawing											DONE 7/1/2020
 		- test by printing											DONE 7/1/2020
 		- test traversal											DONE 8/1/2020
-	- rewrite some algos using node DS
+	- rewrite some algos using node DS								DONE 24/1/2020
+		- rewriting rule6_8											DONE 24/1/2020
 	- reorganize package structure									DONE 6/1/2020
 	- figure out the alt color stuff
 - Latex
@@ -31,8 +33,8 @@ projected finish: 28/1/2019
 			- vertices												DONE 15/1/2020
 			- edges													DONE 15/1/2020
 			- handle rotation										DONE 16/1/2020
-			- testing 												
-			- comprhensive bounds checking in all methods
+			- testing 												DONE 24/1/2020
+			- comprhensive bounds checking in all methods			
 	- draw both board types, scaling, rotate						DONE 19/12/2019
 		- hexes reg													DONE 17/12/2019
 		- hexes ext													DONE 17/12/2019
@@ -50,13 +52,14 @@ projected finish: 28/1/2019
 	- options panel and other panels								
 		- options													DONE 1/1/2020
 		- rewrite option panel so it looks better
-			- remove modes 2 and 3
 		- player options											
 			- initial 												DONE 1/1/2020
 			- better color picker
 			- better team/starting position selection
-		- start screen
+		- start screen												DONE 23/1/2020
+		- board setup panel											DONE 24/1/2020
 - Game
+	- remove modes 2 and 3											DONE 23/1/2020
 	- game logic
 		- store initial game configs for reg, ext boards			
 		- special building option
