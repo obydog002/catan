@@ -25,11 +25,11 @@ public class BoardPanel extends JPanel
 	public static final int HEX_SIDE_LENGTH = 40;
 	
 	// margin for width of panel
-	public static final int BOARD_WIDTH_MARGIN = 100;
+	public static final int BOARD_WIDTH_MARGIN = 80;
 	
 	// margin for top of panel
 	// 10 + 10 because 10 is getting eaten up somewhere
-	public static final int BOARD_HEIGHT_MARGIN_TOP = 100;
+	public static final int BOARD_HEIGHT_MARGIN_TOP = 50;
 	
 	// margin for bottom
 	public static final int BOARD_HEIGHT_MARGIN_BOTTOM = 200;
@@ -41,6 +41,27 @@ public class BoardPanel extends JPanel
 	public static final int BOARD_HEIGHT = 500;
 	
 	private Random rng;
+	
+	private GameData game_data;
+	
+	// states of the game
+	// 0 - board setup
+	// 1 - choose player order
+	// 2 - game playing
+	private int state;
+	
+	// instance variables for drawing board setup stuff
+	Tile hexes_display[];
+	int tokens_display[]; // same as arrays in Config
+	int ports_display[];
+	
+	// count for how many hexes are left - this is already implicit for tokens_display and ports_display
+	int hexes_count[];
+	
+	// locations 
+	Point hexes_points[];
+	Point token_points[];
+	Point port_points[];
 	
 	// rotate the board by 90 degrees
 	private boolean rotate = false;
@@ -66,8 +87,8 @@ public class BoardPanel extends JPanel
 	
 	private int player_selected;
 
+	// hexes half lengths
 	private int x_half_length;
-	
 	private int y_half_length;
 	
 	// boundry for calculating how the mouse click will interact with
@@ -154,9 +175,49 @@ public class BoardPanel extends JPanel
 		return result;
 	}
 	
+	// rotates the board
+	public void toggle_rotate()
+	{
+		rotate = !rotate;
+		
+		repaint();
+	}
+	
+	// initializes the data we need for showing it all
+	public void init_board_setup()
+	{
+		hexes_display = new Tile[6];
+		tokens_display = new int[11];
+		ports_display = new int[6];
+		
+		hexes_points = new Point[6];
+		token_points = new Point[11];
+		port_points = new Point[6];
+		
+		for (int i = 0; i < 6; i++)
+		{
+			// -2,-2 so it doesnt get detected by the index code stuff
+			hexes_display[i] = new Tile(-2,-2);
+			hexes_display[i].set(i,-1,false);
+			
+			hexes_points[i] = new Point();
+			port_points[i] = new Point();
+		}
+		
+		for (int i = 0; i < 11; i++)
+		{
+			token_points[i] = new Point();
+		}
+	}
+	
 	public BoardPanel(GameData game_data, Random rng)
 	{
 		this.rng = rng;
+		this.game_data = game_data;
+		
+		state = 0;
+
+		init_board_setup();
 		
 		hex_selected_i = -1;
 		hex_selected_j = -1;
@@ -208,10 +269,32 @@ public class BoardPanel extends JPanel
 		input = new InputHandler(this);
 	}
 	
-	public void update_mouse_location(int x, int y)
+	// a method that will generate a full board based on the setup data passed to it
+	public void generate_board(BoardSetupData setup)
+	{
+		catan.generate_board(setup);
+		
+		repaint();
+	}
+	
+	// process mouse pressed down
+	public void mouse_held(int x, int y)
+	{
+		
+	}
+	
+	// process mouse released
+	public void mouse_released(int x, int y)
+	{
+		
+	}
+	
+	// input handler will call this to update it
+	public void mouse_move(int x, int y)
 	{
 		this.mouse_x = x;
 		this.mouse_y = y;
+		
 		
 		repaint();
 	}
@@ -1115,6 +1198,61 @@ public class BoardPanel extends JPanel
 		return (x0 - x)*(x0 - x) + (y0 - y)*(y0 - y) < r*r;
 	}
 	
+	// tests if given point is within the hex 
+	// x,y - point coordinates
+	// mid_x,mid_y - middle of hex
+	// half_width - distance from mid to left side
+	// half_height - distance from mid to top side
+	// rotate - if the hex is rotated
+	public boolean in_hex(double x, double y, double mid_x, double mid_y, double half_width, double half_height, boolean rotate)
+	{
+		double point_x[] = new double[6];
+		double point_y[] = new double[6];
+		
+		if (rotate)
+		{
+			point_x[0] = mid_x - half_width/2;
+			point_x[1] = mid_x + half_width/2;
+			point_x[2] = mid_x + half_width;
+			point_x[3] = mid_x + half_width/2;
+			point_x[4] = mid_x - half_width/2;
+			point_x[5] = mid_x - half_width;
+			
+			point_y[0] = mid_y - half_height;
+			point_y[1] = mid_y - half_height;
+			point_y[2] = mid_y;
+			point_y[3] = mid_y + half_height;
+			point_y[4] = mid_y + half_height;
+			point_y[5] = mid_y;
+		}
+		else
+		{
+			point_x[0] = mid_x - half_width;
+			point_x[1] = mid_x;
+			point_x[2] = mid_x + half_width;
+			point_x[3] = mid_x + half_width;
+			point_x[4] = mid_x;
+			point_x[5] = mid_x - half_width;
+			
+			point_y[0] = mid_y - half_height/2;
+			point_y[1] = mid_y - half_height;
+			point_y[2] = mid_y - half_height/2;
+			point_y[3] = mid_y + half_height/2;
+			point_y[4] = mid_y + half_height;
+			point_y[5] = mid_y + half_height/2;
+		}
+		
+		for (int i = 0; i < 6; i++)
+		{
+			if (in_tri_bary(x, y, point_x[i], point_y[i], point_x[(i + 1)%6], point_y[(i + 1)%6], mid_x, mid_y))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	// tests if the given point is within the triangle based on barycentric method
 	// x,y - point coordinates
 	// x0,y0 - first vertex of triangle
@@ -1137,6 +1275,11 @@ public class BoardPanel extends JPanel
 		Graphics2D g2D = (Graphics2D)g;
 		
 		draw_board(g2D);
+		
+		if (state == 0)
+		{
+			draw_board_setup(g2D);
+		}
 	}
 	
 	// currently only supports reguler and extension boards
@@ -1207,7 +1350,13 @@ public class BoardPanel extends JPanel
 		// set house/city width
 		house_width = (x_half_length < y_half_length) ? 2*x_half_length/11 : 2*y_half_length/11;
 		if (house_width < 2)
-			edge_width = 2;
+			house_width = 2;
+		
+		// set token radius
+		token_radius = (x_half_length < y_half_length) ? x_half_length : y_half_length;
+		token_radius  = 2*token_radius/5;
+		if (token_radius < 1)
+			token_radius = 1;
 		
 		// margins from edge
 		int x_margin = BOARD_WIDTH_MARGIN;
@@ -1446,6 +1595,57 @@ public class BoardPanel extends JPanel
 		}
 	}
 	
+	// draws the support stuff needed to make the board
+	// such as tiles, tokens, ports
+	public void draw_board_setup(Graphics2D g)
+	{
+		Dimension current_dim = this.getSize();
+		
+		int width = (int)current_dim.getWidth();
+		int height = (int)current_dim.getHeight();
+		
+		// if dimensions are too small just return
+		if (width <= 2*BOARD_WIDTH_MARGIN || height <= BOARD_HEIGHT_MARGIN_BOTTOM + BOARD_HEIGHT_MARGIN_TOP)
+		{
+			return;
+		}
+		
+		// set hex points
+		// and draw the hexes
+		int x = 2 + x_half_length;
+		int y = height - 2 - y_half_length;
+		for (int i = 0; i < 6; i++)
+		{
+			hexes_points[i].move(x,y);
+			drawHex(g, x, y, x_half_length, y_half_length, rotate, hexes_display[i]);
+			
+			x += 2*x_half_length + 2;
+		}
+		
+		// set token points
+		// draw them as well
+		x = 2 + x_half_length;
+		y = height - 4 - 2*y_half_length - 2*token_radius;
+		int low = 0; // index of 2
+		int high = 10; // index of 12
+		for (int i = 0; i < 5; i++)
+		{
+			token_points[high].move(x,y);
+			drawToken(g, x, y, token_radius, 5, high + 2, false);
+			
+			int y_low = y - 10 - 2*token_radius;
+			token_points[low].move(x,y_low);
+			drawToken(g, x, y_low, token_radius, 5, low + 2, false);
+			
+			x += 10 + 2*token_radius;
+			
+			low++;
+			high--;
+		}
+		
+		
+	}
+	
 	// test method for drawing the board using the nodes instead of array
 	// just to make sure the nodes are synced properly
 	public void draw_board_nodes(Graphics2D g)
@@ -1562,10 +1762,13 @@ public class BoardPanel extends JPanel
 	}
 	
 	// how wide the edges/roads are
-	private static int edge_width = 1;
+	private int edge_width = 1;
 	
 	// how wide houses/cities are
-	private static int house_width = 1;
+	private int house_width = 1;
+	
+	// radius of token
+	private int token_radius = 1;
 	
 	// draw a singular tile
 	// g - graphics object to draw on
@@ -1665,10 +1868,12 @@ public class BoardPanel extends JPanel
 		
 		int number = tile.get_number();
 		
-		int radius = (x_half_length < y_half_length) ? x_half_length : y_half_length;
-		radius  = 2*radius/5;
-		
-		drawToken(g, x0, y0, radius, 5, number, tile.get_robber());
+		// if the number has been set properly we draw a token
+		// or if it has the robber we denote this
+		if (number > 1 && number < 13 || tile.get_robber())
+		{
+			drawToken(g, x0, y0, token_radius, 5, number, tile.get_robber());
+		}
 		
 		// if this is the selected tile draw transparent red over it
 		int index[] = tile.get_index();
