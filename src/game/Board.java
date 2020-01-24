@@ -34,7 +34,7 @@ public class Board
 	// determines the dimensions of the board
 	private int length = -1;
 	
-	static Random rng = new Random();
+	private Random rng;;
 	
 	public Board(Tile tiles[][], Vertex vertices[][], Edge edges[][], int type, int length)
 	{
@@ -45,8 +45,10 @@ public class Board
 		this.length = length;
 	}
 	
-	public Board()
+	public Board(Random rng)
 	{
+		this.rng = rng;
+		
 		hex_head = null;
 		
 		this.tiles = null;
@@ -773,6 +775,88 @@ public class Board
 		}
 	}
 	
+	// a method to generate tile_setup array based on variant mode
+	public int[] get_tile_setup()
+	{
+		int number_tiles = 0;
+		
+		for (int i = 0; i < tiles.length; i++)
+		{
+			number_tiles += tiles[i].length;
+		}
+		
+		int desert_tiles = (length > 1) ? length - 2 : 0;
+		
+		int x = number_tiles - desert_tiles;
+		int count = 0;
+		
+		int[] tile_setup = new int[6];
+		tile_setup[5] = desert_tiles;
+		
+		while (x > 0 && count < 5)
+		{
+			tile_setup[count]++;
+			
+			x--;
+			count++;
+		}
+			
+		while (x > 0)
+		{
+			int r = rng.nextInt(5); // populate with equal chance for each tile type
+			
+			tile_setup[r]++;
+			
+			x--;
+		}
+		
+		return tile_setup;
+	}
+	
+	// method to generate token_setup based on variant mode
+	// desert_tiles - how many desert_tiles so we can make the token array correctly
+	public int[] get_token_setup(int desert_tiles)
+	{
+		int number_tiles = 0;
+		
+		for (int i = 0; i < tiles.length; i++)
+		{
+			number_tiles += tiles[i].length;
+		}
+		
+		number_tiles -= desert_tiles;
+		
+		int token_setup[] = new int[11];
+		
+		int base = number_tiles / 10;
+		int mod = number_tiles % 10;
+		
+		int low = 4; // 4th index is 6
+		int high = 6; // 6th index is 8
+		for (int i = 0; i < 5; i++)
+		{	
+			token_setup[low] = base;
+			token_setup[high] = base;
+			
+			if (mod > 0)
+			{
+				token_setup[low]++;
+				mod--;
+			}
+			
+			if (mod > 0)
+			{
+				token_setup[high]++;
+				mod--;
+			}
+			
+			low--;
+			high++;
+		}
+		
+		return token_setup;
+	}
+	
 	// a method to set tiles with random hexes and tokens
 	// board must be initialized first with 3-reg or 4-ext modes
 	// new methods needed for other boards as this assumes symmetric board types!!
@@ -780,8 +864,8 @@ public class Board
 	// tile_setup[0] wood, 1 brick, 2 sheep, 3 wheat, 4 ore, 5 desert
 	// token_setup - array representng tokens for tiles, sum to # tiles - #desert tiles
 	// 0 #2s, 1 #3s, .... 
-	// correct - if we need to remove instances of too op tiles, aka 6 or 8 next to each other.
-	public void set_board(int[] tile_setup, int[] token_setup, boolean correct)
+	// 6_8 - if we need to remove instances of too op tiles, aka 6 or 8 next to each other.
+	public void set_board(int[] tile_setup, int[] token_setup, boolean rule6_8)
 	{
 		int[] tile_a = new int[tile_setup.length];
 		int[] token_a = new int[token_setup.length];
@@ -811,8 +895,8 @@ public class Board
 			while (tile_a[r] == 0)
 				r++;
 			
-			hexes[i] = r;
 			tile_a[r]--;
+			hexes[i] = r;
 		}
 	
 		int[] tokens = new int[number_tiles - desert]; // don't set the desert tile
@@ -823,22 +907,17 @@ public class Board
 				r++;
 			
 			token_a[r]--;
-			// normalize the tokens.
-			if (r < 5)
-			{
-				tokens[i] = r + 2; 
-			}
-			else
-			{
-				tokens[i] = r + 3;
-			}
+			tokens[i] = r + 2; 
 		}
 		
+		// later we may check for board constraints
+		boolean ok = true;
 		shuffle(hexes);
 		
-		// if correct is true this will loop until it finds a configuration that doesn't violate the 6_8 rule
+		// check for token constraints
 		do
 		{
+			ok = true;
 			shuffle(tokens);
 			
 			r = 0;
@@ -863,60 +942,12 @@ public class Board
 			}
 			
 			// if we need to check the op tiles
-			if (correct)
+			if (rule6_8)
 			{
-				boolean ok = true;
-				for (int i = 0; i < tiles.length; i++)
-				{
-					for (int j = 0; j < tiles[i].length; j++)
-					{
-						// if the number isn't 6 or 8 no point
-						if (tiles[i][j].get_number() == 6 || tiles[i][j].get_number() == 8)
-						{
-							int l_j = j - 1; // left j
-							int r_j = j + 1; // right j
-							int t_i = i - 1; // top i
-							int b_i = i + 1; // bot i
-							
-							// indexes of the hexes 
-							// order- left-top most hex, clockwise 
-							
-							// top 0 is to the right
-							// bot 0 is on the left
-							// handled for tiles.length/2 < 2
-							int[] i_index = {t_i, t_i, i, b_i, b_i, i};
-							int[] j_index = {l_j, j, r_j, r_j, j, l_j};
-							
-							if (i == tiles.length/2) 
-							{	
-								// middle row
-								// both 0s are to the right
-								j_index[0] = l_j; j_index[1] = j; j_index[2] = r_j; j_index[3] = j; j_index[4] = l_j; j_index[5] = l_j;
-							}
-							else if (i > tiles.length/2)
-							{
-								// bottom row
-								// top 0 is on the left
-								// bot 0 is on the right
-								j_index[0] = j; j_index[1] = r_j; j_index[2] = r_j; j_index[3] = j; j_index[4] = l_j; j_index[5] = l_j;
-							}
-							
-							for (int k = 0; k < 6; k++)
-							{
-								if (i_index[k] >= 0 && i_index[k] < tiles.length && j_index[k] >= 0 && j_index[k] < tiles[i_index[k]].length)
-									ok &= !(tiles[i_index[k]][j_index[k]].get_number() == 6 || tiles[i_index[k]][j_index[k]].get_number() == 8);
-							}
-						}
-					}
-				}
-				
-				if (ok)
-				{
-					// no need to correct anymore
-					correct = false;
-				}
+				ok &= check_rule6_8();
 			}
-		} while (correct);
+			
+		} while (!ok);
 		
 		// place the robber at first available desert tile
 		// or if none does nothing
@@ -932,6 +963,41 @@ public class Board
 				}
 			}
 		}
+	}
+	
+	// rule6_8 token constraint
+	// returns false if the current token setting violates the 6_8 rule6_8
+	// true otherwise
+	// loops over tiles, if it is 6 or 8 it then checks neighbours
+	public boolean check_rule6_8()
+	{
+		for (int i = 0; i < tiles.length; i++)
+		{
+			for (int j = 0; j < tiles[i].length; j++)
+			{
+				Tile t = tiles[i][j];
+				int n = t.get_number();
+				if (n == 6 || n == 8) // check neighbours
+				{
+					for (int k = 0; k < 6; k++)
+					{
+						NodeHex n_h = t.node_hex.hexes[k];
+						if (n_h != null)
+						{
+							Tile neigb = n_h.tile;
+							int n2 = neigb.get_number();
+							
+							if (n2 == 6 || n2 == 8)
+							{
+									return false;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return true;
 	}
 	
 	// shuffles array in random order. 
