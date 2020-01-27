@@ -18,27 +18,22 @@ class to draw the board on a JPanel
 */
 public class BoardPanel extends JPanel
 {
-	Catan catan;
-	
-	// logical side length of each hex
-	// then subject to scaling
-	public static final int HEX_SIDE_LENGTH = 40;
-	
 	// margin for width of panel
-	public static final int BOARD_WIDTH_MARGIN = 80;
+	public static final int BOARD_WIDTH_MARGIN = 4;
 	
 	// margin for top of panel
-	// 10 + 10 because 10 is getting eaten up somewhere
-	public static final int BOARD_HEIGHT_MARGIN_TOP = 50;
+	public static final int BOARD_HEIGHT_MARGIN_TOP = 14;
 	
 	// margin for bottom
-	public static final int BOARD_HEIGHT_MARGIN_BOTTOM = 200;
+	public static final int BOARD_HEIGHT_MARGIN_BOTTOM = 4;
 	
 	// initial width of panel
 	public static final int BOARD_WIDTH = 500;
 	
 	// initial height
 	public static final int BOARD_HEIGHT = 500;
+	
+	private Catan catan;
 	
 	private Random rng;
 	
@@ -86,10 +81,6 @@ public class BoardPanel extends JPanel
 	private int mouse_x, mouse_y;
 	
 	private int player_selected;
-
-	// hexes half lengths
-	private int x_half_length;
-	private int y_half_length;
 	
 	// boundry for calculating how the mouse click will interact with
 	// hexes, vertices, edges
@@ -125,7 +116,22 @@ public class BoardPanel extends JPanel
 	// res/font path
 	private static final String FONT_PATH = File.separator + "res" + File.separator + "font" + File.separator;
 	
-	// bufferedimages for fonts
+	// res/decal path
+	private static final String DECAL_PATH = File.separator + "res" + File.separator + "decal" + File.separator;
+	
+	// bufferedimages for decals
+	private static final BufferedImage WOOD_DECAL = load_resource(DECAL_PATH + "wood_dec.png");
+	private static final BufferedImage BRICK_DECAL = load_resource(DECAL_PATH + "brick_dec.png");
+	private static final BufferedImage SHEEP_DECAL = load_resource(DECAL_PATH + "sheep_dec.png");
+	private static final BufferedImage WHEAT_DECAL = load_resource(DECAL_PATH + "wheat_dec.png");
+	private static final BufferedImage ORE_DECAL = load_resource(DECAL_PATH + "ore_dec.png");
+	private static final BufferedImage SHIP_DECAL = load_resource(DECAL_PATH + "ship_dec.png");
+	
+	//bufferedimages for misc fonts
+	private static final BufferedImage FONT_BLUE_QUESTION = load_resource(FONT_PATH + "blQm.png");
+	private static final BufferedImage FONT_BLACK_COLON = load_resource(FONT_PATH + "bCol.png");
+	
+	// bufferedimages for number fonts
 	// first index is value of number (0 - 0, 1 - 1,..., 9 - 9)
 	// second index is color (0 - black, 1 - red)
 	private static final BufferedImage FONT[][] = new BufferedImage[10][2];
@@ -148,6 +154,8 @@ public class BoardPanel extends JPanel
 	private static final BufferedImage ORE_TILE = load_resource(TILE_PATH + "ore.png");
 	private static final BufferedImage DESERT_TILE = load_resource(TILE_PATH + "desert.png");
 	
+	private static boolean verbose = false;
+	
 	// load a png file, from PATH/name
 	// name - location of file relative to PATH
 	public static BufferedImage load_resource(String name)
@@ -167,10 +175,11 @@ public class BoardPanel extends JPanel
 			return null;
 		}
 		
-		if (result != null)
+		if (result != null && verbose)
 			System.out.println(PATH + name + " read successfully.");
-		else
-			System.out.println(PATH + name + " could not be read. result null.");
+		
+		if (result == null)
+			System.out.println(PATH + name + " could not be read.");
 	
 		return result;
 	}
@@ -1274,6 +1283,8 @@ public class BoardPanel extends JPanel
 		
 		Graphics2D g2D = (Graphics2D)g;
 		
+		set_board_lengths();
+		
 		draw_board(g2D);
 		
 		if (state == 0)
@@ -1282,66 +1293,92 @@ public class BoardPanel extends JPanel
 		}
 	}
 	
-	// currently only supports reguler and extension boards
-	// of any length
-	// custom drawing must be done for other board types
-	public void draw_board(Graphics2D g)
+	// length variables
+	// hexes half lengths
+	private int x_half_length = 1;
+	private int y_half_length = 1;
+	
+	// how wide the edges/roads are
+	private int edge_width = 1;
+	
+	// how wide houses/cities are
+	private int house_width = 1;
+	
+	// radius of token
+	private int token_radius = 1;
+	
+	// port lengths
+	private int port_x_length = 1;
+	private int port_y_length = 1; 
+	
+	// port lengths we have to leave to draw ports
+	private int port_x_lens = 3;
+	private int port_y_lens = 3;
+	
+	// setup margins
+	private int x_setup_margin = 3;
+	private int y_setup_margin = 3;
+	
+	// sets widths/heights of hexes/tokens/ports and so on
+	public void set_board_lengths()
 	{
-		Board board = catan.get_board();
-		
-		if (board == null) 
-			return;
-		
 		Dimension current_dim = this.getSize();
 		
-		// logical width and height
+		// logical sizes
 		int width = (int)current_dim.getWidth() - 2*BOARD_WIDTH_MARGIN;
 		int height = (int)current_dim.getHeight() - BOARD_HEIGHT_MARGIN_TOP - BOARD_HEIGHT_MARGIN_BOTTOM;
 		
-		// dont draw board if its too small	
-		if (width < 1 || height < 1) 
+		if (width < 1 || height < 1) // too small
 		{
-			clear(g, LIGHT_RED);
 			return;
 		}
-		else
-			clear(g, SEA_BLUE);
+		
+		Board board = catan.get_board();
+		
+		if (board == null)
+		{
+			return;
+		}
 		
 		int len = board.get_length();
+		int type = board.get_type();
 		
-		int x_dist_edge = 0;
+		// how many tile lengths in each direction for board
+		int x_amount = 0;
+		int y_amount = 0;
 		
-		if (rotate)
+		if (type == 1) // ext
 		{
-			if (board.get_type() == 1)
-			{
-				x_half_length = (int)(width/(3*len - 1));
-				y_half_length = (int)(height/(4*len - 4));
-				
-				x_dist_edge = (3*len - 2)*x_half_length;
-			}
-			else
-			{
-				x_half_length = (int)(width/(3*len - 1));
-				y_half_length = (int)(height/(4*len - 2));
-				
-				x_dist_edge = (3*len - 2)*x_half_length;
-			}
+			x_amount = 4*len - 4;
+			y_amount = 3*len - 1;
 		}
-		else
+		else // normal
 		{
-			if (board.get_type() == 1)
-			{
-				x_half_length = (int)(width/(4*len - 4));
-				y_half_length = (int)(height/(3*len - 1));
-			}
-			else
-			{
-				x_half_length = (int)(width/(4*len - 2));
-				y_half_length = (int)(height/(3*len - 1));
-			}
+			x_amount = 4*len - 2;
+			y_amount = 3*len - 1;
 		}
-	
+
+		if (rotate) // swap them if rotate
+		{
+			int temp = x_amount;
+			x_amount = y_amount;
+			y_amount = temp;
+		}
+		
+		// what fraction port x is of x_half length
+		double port_x_frac = 0.5;
+		
+		x_half_length = (int)(width/(2*port_x_lens*port_x_frac + x_amount));
+		
+		port_x_length = (int)(port_x_frac * x_half_length);
+		
+		// similarily for y
+		double port_y_frac = 0.5;
+		
+		y_half_length = (int)((height - 2*y_setup_margin)/(2*port_y_lens*port_y_frac + y_amount + 4));
+		
+		port_y_length = (int)(port_y_frac * y_half_length);
+		
 		// set edge width
 		edge_width = (x_half_length < y_half_length) ? x_half_length/7 : y_half_length/7;
 		if (edge_width < 1) 
@@ -1357,10 +1394,25 @@ public class BoardPanel extends JPanel
 		token_radius  = 2*token_radius/5;
 		if (token_radius < 1)
 			token_radius = 1;
+	}
+	
+	// currently only supports reguler and extension boards
+	// of any length
+	// custom drawing must be done for other board types
+	public void draw_board(Graphics2D g)
+	{
+		Board board = catan.get_board();
+		
+		if (board == null) 
+			return;
+		
+		clear(g, SEA_BLUE);
+		
+		int len = board.get_length();
 		
 		// margins from edge
-		int x_margin = BOARD_WIDTH_MARGIN;
-		int y_margin = BOARD_HEIGHT_MARGIN_TOP;
+		int x_margin = BOARD_WIDTH_MARGIN + port_x_lens * port_x_length;
+		int y_margin = BOARD_HEIGHT_MARGIN_TOP + port_y_lens * port_y_length;
 			
 		Tile[][] tiles = board.get_tiles();
 		Edge[][] edges = board.get_edges();
@@ -1372,6 +1424,8 @@ public class BoardPanel extends JPanel
 		
 		if (rotate)
 		{
+			int x_dist_edge = (3*len - 2)*x_half_length;
+			
 			// tiles
 			for (int i = 0; i < tiles.length; i++)
 			{
@@ -1397,7 +1451,7 @@ public class BoardPanel extends JPanel
 					vertex_bounds[top_y_index + 2][j].move(x_dist - x_half_length/2, y_dist - y_half_length);
 					vertex_bounds[top_y_index + 2][j + 1].move(x_dist - x_half_length/2, y_dist + y_half_length);
 					
-					if (reverse)
+					if (reverse || tiles.length == 1)
 						vertex_bounds[top_y_index + 3][j].move(x_dist - x_half_length, y_dist);
 					else
 						vertex_bounds[top_y_index + 3][j + 1].move(x_dist - x_half_length, y_dist);
@@ -1491,7 +1545,9 @@ public class BoardPanel extends JPanel
 					vertex_bounds[top_y_index + 2][j].move(x_dist - x_half_length, y_dist + y_half_length/2);
 					vertex_bounds[top_y_index + 2][j + 1].move(x_dist + x_half_length, y_dist + y_half_length/2);
 					
-					if (reverse)
+					// check for tiles length for correction of board size of one
+					// its very hacky
+					if (reverse || tiles.length == 1)
 						vertex_bounds[top_y_index + 3][j].move(x_dist, y_dist + y_half_length);
 					else
 						vertex_bounds[top_y_index + 3][j + 1].move(x_dist, y_dist + y_half_length);
@@ -1601,31 +1657,30 @@ public class BoardPanel extends JPanel
 	{
 		Dimension current_dim = this.getSize();
 		
-		int width = (int)current_dim.getWidth();
-		int height = (int)current_dim.getHeight();
-		
-		// if dimensions are too small just return
-		if (width <= 2*BOARD_WIDTH_MARGIN || height <= BOARD_HEIGHT_MARGIN_BOTTOM + BOARD_HEIGHT_MARGIN_TOP)
-		{
-			return;
-		}
+		// logical sizes
+		int width = (int)current_dim.getWidth() - 2*BOARD_WIDTH_MARGIN;
+		int height = (int)current_dim.getHeight() - BOARD_HEIGHT_MARGIN_BOTTOM;
 		
 		// set hex points
 		// and draw the hexes
-		int x = 2 + x_half_length;
-		int y = height - 2 - y_half_length;
-		for (int i = 0; i < 6; i++)
+		int x = x_setup_margin + x_half_length;
+		int y = height - y_setup_margin - y_half_length;
+		for (int i = 0; i < 3; i++)
 		{
 			hexes_points[i].move(x,y);
 			drawHex(g, x, y, x_half_length, y_half_length, rotate, hexes_display[i]);
 			
-			x += 2*x_half_length + 2;
+			int y_low = y - y_setup_margin - 2*y_half_length;
+			hexes_points[i + 3].move(x, y_low);
+			drawHex(g, x, y_low, x_half_length, y_half_length, rotate, hexes_display[i + 3]);
+			x += 2*x_half_length + x_setup_margin;
 		}
 		
 		// set token points
 		// draw them as well
-		x = 2 + x_half_length;
-		y = height - 4 - 2*y_half_length - 2*token_radius;
+		// extra margin for clarity
+		x = 4*x_setup_margin + x_setup_margin + 6*x_half_length + token_radius;
+		y = height - y_setup_margin - token_radius;
 		int low = 0; // index of 2
 		int high = 10; // index of 12
 		for (int i = 0; i < 5; i++)
@@ -1633,17 +1688,40 @@ public class BoardPanel extends JPanel
 			token_points[high].move(x,y);
 			drawToken(g, x, y, token_radius, 5, high + 2, false);
 			
-			int y_low = y - 10 - 2*token_radius;
+			int y_low = y - y_setup_margin - 2*token_radius;
 			token_points[low].move(x,y_low);
 			drawToken(g, x, y_low, token_radius, 5, low + 2, false);
 			
-			x += 10 + 2*token_radius;
+			x += x_setup_margin + 2*token_radius;
 			
 			low++;
 			high--;
 		}
 		
+		// set ports points 
+		// and draw
+		// 1 extra margin for clarity
+		x = 4*x_setup_margin + x_setup_margin + 6*x_half_length + port_x_length;
 		
+		// similarily for y, 1 extra margin
+		y = height - 3*y_setup_margin - 4*token_radius - y_setup_margin - port_y_length;
+		
+		for (int i = 0; i < 3; i++)
+		{
+			port_points[i].move(x,y);
+			drawPort(g, x, y, port_x_length, port_y_length, null, i, 2, 1);
+			
+			int y_low = y - y_setup_margin - 2*port_y_length;
+			
+			port_points[i].move(x, y_low);
+			int in = 2;
+			if (i == 2) // adjust for 'any' port
+				in = 3;
+				
+			drawPort(g, x, y_low, port_x_length, port_y_length, null, i + 3, in, 1);
+			
+			x += x_setup_margin + 2*port_x_length;
+		}
 	}
 	
 	// test method for drawing the board using the nodes instead of array
@@ -1757,18 +1835,7 @@ public class BoardPanel extends JPanel
 			
 			y_dist_edge += 3*y_half_length/2;
 		}
-			
-		
 	}
-	
-	// how wide the edges/roads are
-	private int edge_width = 1;
-	
-	// how wide houses/cities are
-	private int house_width = 1;
-	
-	// radius of token
-	private int token_radius = 1;
 	
 	// draw a singular tile
 	// g - graphics object to draw on
@@ -1919,32 +1986,91 @@ public class BoardPanel extends JPanel
 		g.drawOval(x0 - r, y0 - r, 2*r, 2*r);
 		
 		// if the robber is present we don't need to draw anything
+		// or -1 is a dont draw anything number
 		if (!robber && number != -1)
 		{
-			int digit_width = (int)(Math.sqrt(2)*r/2);
+			int digit_width = (int)(5*r/9);
 			
-			if (number > 9)
+			// adjust for 'smaller' numbers
+			int dist = (number > 7) ? number - 7 : 7 - number;
+			
+			digit_width -= dist;
+			
+			// a little above center 
+			int offset_y = 2*r/11;
+			
+			if (digit_width < 1)
+				return;
+			
+			boolean black = number != 6 && number != 8;
+			
+			drawNumber(g, x0, y0 - offset_y, digit_width, number, black);
+			
+			// draw the dots associated with the probability
+			int n_dots = 6 - dist;
+			
+			// red circles
+			if (number == 6 || number == 8)
 			{
-				// 10s digit
-				int d1 = number / 10;
-				int d0 = number % 10;
-				g.drawImage(FONT[d1][0], x0 - digit_width, y0 - digit_width, digit_width, 2*digit_width, null);
-				g.drawImage(FONT[d0][0], x0, y0 - digit_width, digit_width, 2*digit_width, null);
+				g.setColor(Color.RED);
 			}
 			else
 			{
-				// red numbers
-				if (number == 6 || number == 8)
-				{
-					g.drawImage(FONT[number][1], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
-				}
-				else
-				{
-					g.drawImage(FONT[number][0], x0 - digit_width, y0 - digit_width, 2*digit_width, 2*digit_width, null);
-				}
+				g.setColor(Color.BLACK);
+			}
+			
+			int circ_r = r/10;
+			
+			int circ_x = x0 - (n_dots - 1)*3/2 * circ_r;
+			int circ_y = y0 + r/2;
+			for (int i = 0; i < n_dots; i++)
+			{
+				g.fillOval(circ_x - circ_r, circ_y - circ_r, 2*circ_r, 2*circ_r);
+				
+				circ_x += 3*circ_r;
 			}
 		}
 		
+	}
+	
+	// draws the number centered at x0,y0 with width radius digit_width
+	// for numbers greater than 10 it shrinks them widthwise to fit
+	// black - true for black, false for red
+	public void drawNumber(Graphics2D g, int x0, int y0, int digit_width, int number, boolean black)
+	{
+		// how many digits in number
+		// should check for 0/neg values
+		if (number < 1) 
+			return;
+		
+		int n_digits = (int)Math.log10(number) + 1;
+		
+		int act_width = digit_width/n_digits;
+		
+		int base = number;
+		int mod = number % 10;
+		
+		int x = x0 + (n_digits - 1)*act_width - act_width;
+		int y = y0 - digit_width;
+		
+		for (int i = 0; i < n_digits; i++)
+		{
+			if (black)
+			{
+				g.drawImage(FONT[mod][0], x, y, 2*act_width, 2*digit_width, null);
+			}
+			else
+			{
+				g.drawImage(FONT[mod][1], x, y, 2*act_width, 2*digit_width, null);
+			}
+			
+			x -= 2*act_width;
+			
+			number /= 10;
+			mod = number % 10;
+		}
+		
+		return;
 	}
 	
 	// for drawing the edges (roads)
@@ -2022,6 +2148,77 @@ public class BoardPanel extends JPanel
 			g.setColor(TRANS_RED);
 			
 			g.fillOval(x0 - house_width, y0 - house_width, 2*house_width, 2*house_width);
+		}
+	}
+	
+	// draw port centered at x0, y0, width and height radiuses, with connections to the vertices at edge, with type
+	// 0 - wood
+	// 1 - brick
+	// 2 - sheep
+	// 3 - wheat
+	// 4 - ore
+	// 5 - any
+	// in - in rate 
+	// out - out rate
+	// example in = 3, out = 1 would mean 3:1, standard question port trade
+	public void drawPort(Graphics2D g, int x0, int y0, int width, int height, Edge edge, int type, int in, int out)
+	{
+		// draw ship and sails
+		g.drawImage(SHIP_DECAL, x0 - width, y0 - height, 2*width, 2*height, null);
+		
+		int trade_x = x0 - 9*width/10;
+		int trade_y = y0 - 9*height/10;
+		
+		BufferedImage trade = null;
+		if (type == 0) // wood port
+		{
+			trade = WOOD_DECAL;
+		}
+		else if (type == 1) // brick port
+		{
+			trade = BRICK_DECAL;
+		}
+		else if (type == 2) // sheep port
+		{
+			trade = SHEEP_DECAL;
+		}
+		else if (type == 3) // wheat port
+		{
+			trade = WHEAT_DECAL;
+		}
+		else if (type == 4) // ore port
+		{
+			trade = ORE_DECAL;
+		}
+		else if (type == 5) // blue question mark for any port
+		{
+			trade = FONT_BLUE_QUESTION;
+		}
+		
+		if (trade != null) // check for null
+		{
+			g.drawImage(trade, trade_x, trade_y, 9*width/5, 9*height/10, null);
+		}
+		
+		// valid ratios otherwise we can skip drawing
+		if (in > 0 && out > 0)
+		{
+			// mid point
+			int number_x = x0;
+			int number_y = y0 + height/5;
+			
+			g.drawImage(FONT_BLACK_COLON, number_x - width/5, number_y - height/5, 2*width/5, 2*height/5, null);
+			
+			drawNumber(g, number_x - width/5 - height/5, number_y, height/5, in, true);
+			drawNumber(g, number_x + width/5 + height/5, number_y, height/5, out, true);
+		}
+		
+		// if edge isnt null and its on the border
+		if (edge != null)
+		{
+			NodeEdge node = edge.node_edge;
+			
+			//if ()
 		}
 	}
 	
