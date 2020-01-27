@@ -19,7 +19,6 @@ public class NodeVertex
 	//      v2 					v2	   v1
 	//
 	
-
 	public NodeHex hexes[];
 	public NodeVertex vertices[];
 	public NodeEdge edges[];
