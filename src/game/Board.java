@@ -417,6 +417,14 @@ public class Board
 				node.edges[4] = temp_edges[top_index + 2][b_j];
 				node.edges[5] = temp_edges[top_index + 1][j];
 				
+				// connect parent hex to edges
+				node.edges[0].hexes[1] = node;
+				node.edges[1].hexes[0] = node;
+				node.edges[2].hexes[0] = node;
+				node.edges[3].hexes[0] = node;
+				node.edges[4].hexes[1] = node;
+				node.edges[5].hexes[1] = node;
+				
 				// connect edges to vertices, connect vertices to edges
 				node.edges[0].vertices[0] = node.vertices[1];
 				node.edges[0].vertices[1] = node.vertices[0];
