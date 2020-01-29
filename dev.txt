@@ -34,7 +34,13 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 			- edges													DONE 15/1/2020
 			- handle rotation										DONE 16/1/2020
 			- testing 												DONE 24/1/2020
-			- comprhensive bounds checking in all methods			
+			- comprehensive bounds checking in all methods			
+		- board/ setup collisions
+			- tiles													DONE 29/1/2020
+			- tokens												DONE 29/1/2020
+			- ports													DONE 29/1/2020
+			- robber												DONE 29/1/2020
+			- test thoroughly										
 	- draw both board types, scaling, rotate						DONE 19/12/2019
 		- hexes reg													DONE 17/12/2019
 		- hexes ext													DONE 17/12/2019
@@ -47,8 +53,16 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 			- tile images											DONE 19/12/2019
 			- houses/cities											DONE 20/12/2019
 			- roads													DONE 20/12/2019
+			- decals for ports										DONE 29/1/2020
+			- cards (dev/res)
 		- tokens 													DONE 19/12/2019
-		- ports
+		- ports														DONE 29/1/2020
+		- setup														DONE 29/1/2020
+			- tiles													DONE 29/1/2020
+			- tokens												DONE 29/1/2020
+			- ports													DONE 29/1/2020
+			- robber												DONE 29/1/2020
+		- cards
 	- options panel and other panels								
 		- options													DONE 1/1/2020
 		- rewrite option panel so it looks better
