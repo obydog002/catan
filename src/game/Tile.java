@@ -22,7 +22,7 @@ public class Tile
 	public Tile()
 	{
 		this.resource = -1;
-		this.number = 0;
+		this.number = -1;
 		i = j = -1;
 		
 		node_hex = null;
@@ -31,7 +31,7 @@ public class Tile
 	public Tile(int i, int j)
 	{
 		this.resource = -1;
-		this.number = 0;
+		this.number = -1;
 		this.i = i;
 		this.j = j;
 		
@@ -44,11 +44,29 @@ public class Tile
 		this.number = number;
 		this.i = i;
 		this.j = j;
+		
+		node_hex = null;
 	}
 	
 	public String toString()
 	{
 		return "{(" + i + "," + j + ")," + resource + "," + number + "," + robber + "}";
+	}
+	
+	// individual setters
+	public void set_resource(int resource)
+	{
+		this.resource = resource;
+	}
+	
+	public void set_number(int number)
+	{
+		this.number = number;
+	}
+	
+	public void set_robber(boolean robber)
+	{
+		this.robber = robber;
 	}
 	
 	// set resource type, number, robber
@@ -72,11 +90,6 @@ public class Tile
 	public boolean get_robber()
 	{
 		return robber;
-	}
-	
-	public void set_robber(boolean robber)
-	{
-		this.robber = robber;
 	}
 	
 	// get i and j in 
