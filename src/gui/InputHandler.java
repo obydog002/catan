@@ -21,7 +21,7 @@ public class InputHandler implements MouseListener, ActionListener, MouseMotionL
 	// when mouse button held down
 	public void mousePressed(MouseEvent e)
 	{
-		panel.mouse_held(e.getX(), e.getY());
+		panel.mouse_pressed(e.getX(), e.getY());
 	}
 	
 	// mouse button released
@@ -48,14 +48,16 @@ public class InputHandler implements MouseListener, ActionListener, MouseMotionL
 	// mouse motion listener
 	// -----------------------------------------
 	
+	// mouse moved, button held
 	public void mouseDragged(MouseEvent e)
 	{
-		
+		panel.mouse_dragged(e.getX(), e.getY());
 	}
 	
+	// mouse moved but no button held
 	public void mouseMoved(MouseEvent e)
 	{
-		panel.mouse_move(e.getX(), e.getY());
+		panel.mouse_moved(e.getX(), e.getY());
 	}
 	
 	// action listener
