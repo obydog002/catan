@@ -10,10 +10,6 @@ public class Vertex
 	// -1 for nothing, 0 for settlement, 1 for city
 	private int type;
 	
-	// if there is a port
-	// -1 for no port
-	private int port;
-	
 	// array indices
 	private int i, j;
 	
@@ -24,7 +20,6 @@ public class Vertex
 	{
 		this.player = -1;
 		this.type = -1;
-		this.port = -1;
 		i = j = -1;
 		
 		node_vertex = null;
@@ -34,18 +29,16 @@ public class Vertex
 	{
 		this.player = -1;
 		this.type = -1;
-		this.port = -1;
 		this.i = i;
 		this.j = j;
 		
 		node_vertex = null;
 	}
 	
-	public void set(int player, int type, int port)
+	public void set(int player, int type)
 	{
 		this.player = player;
 		this.type = type;
-		this.port = port;
 	}
 
 	public int get_player()
@@ -56,11 +49,6 @@ public class Vertex
 	public int get_type()
 	{
 		return type;
-	}
-	
-	public int get_port()
-	{
-		return port;
 	}
 	
 	public String toString()
