@@ -1074,8 +1074,8 @@ public class Board
 			{
 				int player = rng.nextInt(4);
 				int road = 1;
-				
-				edges[i][j].set(player, road);
+				int port = rng.nextInt(7) - 1;
+				edges[i][j].set(player, road, port);
 			}
 		}
 		
@@ -1090,9 +1090,7 @@ public class Board
 				else
 					player = -1;
 				
-				int port = rng.nextInt(10) == 0 ? 0 : -1;
-				
-				vertices[i][j].set(player, type, port);
+				vertices[i][j].set(player, type);
 			}
 		}
 	}
