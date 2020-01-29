@@ -45,10 +45,15 @@ public class BoardPanel extends JPanel
 	// 2 - game playing
 	private int state;
 	
+	// board setup
+	// ------------------------------------------------------------------
+	//
+	
 	// instance variables for drawing board setup stuff
 	Tile hexes_display[];
 	int tokens_display[]; // same as arrays in Config
 	int ports_display[];
+	int robber_display;
 	
 	// count for how many hexes are left - this is already implicit for tokens_display and ports_display
 	int hexes_count[];
@@ -58,6 +63,27 @@ public class BoardPanel extends JPanel
 	Point token_points[];
 	Point port_points[];
 	
+	Point robber_point;
+	
+	// bounding rectangles to make collision a bit faster
+	Point hex_rect_top_left;
+	Point hex_rect_bot_right;
+	
+	Point token_rect_top_left;
+	Point token_rect_bot_right;
+	
+	Point port_rect_top_left;
+	Point port_rect_bot_right;
+	
+	// ------------------------------------------------------------------
+	
+	// boundry for calculating how the mouse click will interact with
+	// hexes, vertices, edges
+	private Point vertex_bounds[][];
+	
+	// hex center
+	private Point hex_center[][];
+	
 	// rotate the board by 90 degrees
 	private boolean rotate = false;
 	
@@ -65,6 +91,20 @@ public class BoardPanel extends JPanel
 	private static InputHandler input;
 	
 	private static Color player_col[];
+	
+	// what item is currently being held
+	// will depend on state, but -1 means nothing held
+	// state = 0 (setup phase):
+	// 0 - hex, 1 - token, 2 - port, 3 - robber
+	private int item_held = -1;
+	
+	// further details of that item
+	// state = 0 (setup phase):
+	// hex: 0 - wood, 1 - brick, 2 - sheep, 3 - wheat, 4 - ore, 5 - desert
+	// token: represents number
+	// port: 0 - wood, 1 - brick, 2 - sheep, 3 - wheat, 4 - ore, 5 - any
+	// robber - implicit in item held
+	private int item_index = -1;
 	
 	// refers to which hex, vertex or edge the mouse closest to 
 	// for mouse selection only
@@ -82,12 +122,14 @@ public class BoardPanel extends JPanel
 	
 	private int player_selected;
 	
-	// boundry for calculating how the mouse click will interact with
-	// hexes, vertices, edges
-	private Point vertex_bounds[][];
+	// debugging
+	// ------------------------------------------------------------------
+	//
 	
-	// hex center
-	private Point hex_center[][];
+	// enables red transparens over hexes/vertices/edges
+	private boolean collision_debug = false;
+	
+	// ------------------------------------------------------------------
 	
 	// alpha mask
 	private static final int ALP_MASK = 0x77FFFFFF;
@@ -184,24 +226,28 @@ public class BoardPanel extends JPanel
 		return result;
 	}
 	
-	// rotates the board
-	public void toggle_rotate()
-	{
-		rotate = !rotate;
-		
-		repaint();
-	}
-	
-	// initializes the data we need for showing it all
+	// initializes the data we need setup
 	public void init_board_setup()
 	{
 		hexes_display = new Tile[6];
 		tokens_display = new int[11];
 		ports_display = new int[6];
+		robber_display = 1;
 		
 		hexes_points = new Point[6];
 		token_points = new Point[11];
 		port_points = new Point[6];
+		robber_point = new Point();
+		
+		// bounding rects
+		hex_rect_top_left = new Point();
+		hex_rect_bot_right = new Point();
+		
+		token_rect_top_left = new Point();
+		token_rect_bot_right = new Point();
+		
+		port_rect_top_left = new Point();
+		port_rect_bot_right = new Point();
 		
 		for (int i = 0; i < 6; i++)
 		{
@@ -278,6 +324,14 @@ public class BoardPanel extends JPanel
 		input = new InputHandler(this);
 	}
 	
+	// rotates the board
+	public void toggle_rotate()
+	{
+		rotate = !rotate;
+		
+		repaint();
+	}
+	
 	// a method that will generate a full board based on the setup data passed to it
 	public void generate_board(BoardSetupData setup)
 	{
@@ -287,27 +341,281 @@ public class BoardPanel extends JPanel
 	}
 	
 	// process mouse pressed down
-	public void mouse_held(int x, int y)
+	public void mouse_pressed(int x, int y)
 	{
+		mouse_x = x;
+		mouse_y = y;
 		
+		Board board = catan.get_board();
+		
+		if (state == 0) // setup phase
+		{
+			// check hexes first
+			find_board_hex(x, y);
+			
+			// found hex
+			if (hex_selected_i != -1 && hex_selected_j != -1)
+			{
+				Tile[][] hexes = board.get_tiles();
+				Tile t = hexes[hex_selected_i][hex_selected_j];
+				
+				int numb = t.get_number();
+				int hex = t.get_resource();
+				if (t.get_robber()) // if robber remove robber from this
+				{
+					item_held = 3;
+					item_index = -1;
+					
+					t.set_robber(false);
+					
+					repaint();
+					return;
+				}
+				if (numb != -1) // do token removal and set token to -1
+				{
+					item_held = 1;
+					item_index = numb;
+					
+					t.set_number(-1);
+					
+					repaint();
+					return;
+				}
+				else if (hex != -1) // check valid hex and set to -1
+				{
+					item_held = 0;
+					item_index = hex;
+					
+					t.set_resource(-1);
+					
+					repaint();
+					return;
+				}
+			}
+			
+			// then check ports
+			find_board_edge(x, y);
+			
+			if (edge_selected_i != -1 && edge_selected_j != -1)
+			{
+				Edge[][] edges = catan.get_board().get_edges();
+				Edge e = edges[edge_selected_i][edge_selected_j];
+				
+				int port = e.get_port();
+				if (port > -1) // valid port
+				{
+					item_held = 2;
+					item_index = port;
+					
+					e.set_port(-1);
+					
+					repaint();
+					return;
+				}
+			}
+			
+			// if not check setup bounds
+			
+			// check setup hexes
+			if (x > hex_rect_top_left.x && y > hex_rect_top_left.y && x < hex_rect_bot_right.x && y < hex_rect_bot_right.y)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					if (in_hex(x, y, hexes_points[i].x, hexes_points[i].y, x_half_length, y_half_length, rotate))
+					{
+						item_held = 0;
+						item_index = i;
+						
+						return;
+					}
+				}
+			}
+			
+			// check setup tokens
+			if (x > token_rect_top_left.x && y > token_rect_top_left.y && x < token_rect_bot_right.x && y < token_rect_bot_right.y)
+			{
+				// break them into two loops
+				for (int i = 0; i < 5; i++)
+				{
+					if (in_circle(x, y, token_points[i].x, token_points[i].y, token_radius))
+					{
+						item_held = 1;
+						item_index = i + 2;
+						
+						return;
+					}
+				}
+				
+				for (int i = 6; i < 11; i++)
+				{
+					if (in_circle(x, y, token_points[i].x, token_points[i].y, token_radius))
+					{
+						item_held = 1;
+						item_index = i + 2;
+						
+						return;
+					}
+				}
+			}
+			
+			// check setup ports
+			if (x > port_rect_top_left.x && y > port_rect_top_left.y && x < port_rect_bot_right.x && y < port_rect_bot_right.y)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					int x_top_left = port_points[i].x - port_x_length;
+					int y_top_left = port_points[i].y - port_y_length;
+					int x_bot_right = port_points[i].x + port_x_length;
+					int y_bot_right = port_points[i].y + port_y_length;
+					
+					if (x > x_top_left && y > y_top_left && x < x_bot_right && y < y_bot_right)
+					{
+						item_held = 2;
+						item_index = i;
+						
+						return;
+					}
+				}
+			}
+			
+			// check setup robber
+			if (in_circle(x, y, robber_point.x, robber_point.y, token_radius))
+			{
+				item_held = 3;
+				item_index = -1;
+				
+				return;
+			}
+			
+			item_held = -1;
+			item_index = -1;
+		}
 	}
 	
 	// process mouse released
 	public void mouse_released(int x, int y)
 	{
+		mouse_x = x;
+		mouse_y = x;
 		
+		if (state == 0) // setup phase
+		{
+			if (item_held == 0 || item_held == 1 || item_held == 3) // hex, token or robber
+			{
+				find_board_hex(x, y);
+				
+				int numb = -1;
+				int res = -1;
+				boolean rob = false;
+				Tile t = null;
+				if (hex_selected_i != -1 && hex_selected_j != -1)
+				{
+					Tile hexes[][] = catan.get_board().get_tiles();
+					t = hexes[hex_selected_i][hex_selected_j];
+					
+					numb = t.get_number();
+					res = t.get_resource();
+					rob = t.get_robber();
+				}
+				
+				if (t != null) // found hex
+				{
+					if (item_held == 3) // robber
+					{
+						// later I need to set counts properly
+						
+						boolean desert = res == 5;
+						boolean tile_set = numb != -1 && res != -1;
+						
+						if ((desert || tile_set) && !rob) // either desert or the tile is set properly, no robber
+						{
+							t.set_robber(true);
+						}
+						else // don't do anything
+						{
+							
+						}
+					}
+					else if (item_held == 1) // token
+					{
+						if (!rob && numb == -1) // if no robber and token not set
+						{
+							t.set_number(item_index);
+						}
+						else
+						{
+							
+						}
+					}
+					else // hex
+					{
+						if (!rob && numb == -1 && res == -1) // no robber, token and res not set
+						{
+							t.set_resource(item_index);
+						}
+						else
+						{
+							
+						}
+					}
+				}
+				else // dropped nowhere
+				{
+					
+				}
+			}
+			else if (item_held == 2) // port
+			{
+				find_board_edge(x, y);
+				
+				if (edge_selected_i != -1 && edge_selected_j != -1)
+				{
+					Edge edges[][] = catan.get_board().get_edges();
+					
+					Edge e = edges[edge_selected_i][edge_selected_j];
+					NodeEdge node = e.node_edge;
+					
+					// on the border so we can place the port
+					if (node.get_border_hex() != null)
+					{
+						e.set_port(item_index);
+					}
+				}
+			}
+		}
+		
+		item_held = -1;
+		item_index = -1;
+						
+		repaint();
+		return;
 	}
 	
-	// input handler will call this to update it
-	public void mouse_move(int x, int y)
+	// process mouse movement when button is held
+	public void mouse_dragged(int x, int y)
 	{
-		this.mouse_x = x;
-		this.mouse_y = y;
-		
+		mouse_x = x;
+		mouse_y = y;
 		
 		repaint();
 	}
 
+	// debug method
+	public void mouse_moved(int x, int y)
+	{
+		if (collision_debug)
+		{
+			mouse_x = x;
+			mouse_y = y;
+			
+			find_board_hex(x, y);
+			find_board_edge(x, y);
+			find_board_vertex(x, y);
+			
+			repaint();
+		}
+	}
+	
 	// will try to find the nearest hex to the coordinates supplied on the board
 	// x,y - point coordinates
 	// sets the hex_selected fields to nearest
@@ -316,18 +624,27 @@ public class BoardPanel extends JPanel
 	{
 		// if either are 0 dont proceed
 		if (x_half_length == 0 || y_half_length == 0)
+		{
+			hex_selected_i = -1;
+			hex_selected_j = -1;
 			return;
+		}
 		
 		Board board = catan.get_board();
 		Vertex[][] vertices = board.get_vertices();
 		
 		Dimension dim = this.getSize();
 		
-		int log_width = (int)dim.getWidth() - 2*BOARD_WIDTH_MARGIN;
-		int log_height = (int)dim.getHeight() - (BOARD_HEIGHT_MARGIN_BOTTOM + BOARD_HEIGHT_MARGIN_TOP);
+		// margins 
+		int x_margin = BOARD_WIDTH_MARGIN + port_x_lens*port_x_length;
+		int y_top_margin = BOARD_HEIGHT_MARGIN_TOP + port_y_lens*port_y_length;
+		int y_bot_margin = BOARD_HEIGHT_MARGIN_BOTTOM + 2*y_setup_margin + 4*y_half_length + port_y_lens*port_y_length;
+		
+		int log_width = (int)dim.getWidth() - 2*x_margin;
+		int log_height = (int)dim.getHeight() - (y_top_margin + y_bot_margin);
 		
 		// out of x bounds
-		if (x <= BOARD_WIDTH_MARGIN || x >= log_width + BOARD_WIDTH_MARGIN)
+		if (x <= x_margin || x >= log_width + x_margin)
 		{
 			hex_selected_i = -1;
 			hex_selected_j = -1;
@@ -335,7 +652,7 @@ public class BoardPanel extends JPanel
 		}
 		
 		// similarily y bounds
-		if (y <= BOARD_HEIGHT_MARGIN_TOP || y >= log_height + BOARD_HEIGHT_MARGIN_TOP)
+		if (y <= y_top_margin || y >= log_height + y_top_margin)
 		{
 			hex_selected_i = -1;
 			hex_selected_j = -1;
@@ -531,7 +848,7 @@ public class BoardPanel extends JPanel
 		}
 		else
 		{
-			int cor_y = y - BOARD_HEIGHT_MARGIN_TOP;
+			int cor_y = y - y_top_margin;
 			
 			int height_part = 3*y_half_length/2;
 			
@@ -1277,22 +1594,6 @@ public class BoardPanel extends JPanel
 		return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
 	}
 	
-	public void paintComponent(Graphics g)
-	{
-		super.paintComponent(g);
-		
-		Graphics2D g2D = (Graphics2D)g;
-		
-		set_board_lengths();
-		
-		draw_board(g2D);
-		
-		if (state == 0)
-		{
-			draw_board_setup(g2D);
-		}
-	}
-	
 	// length variables
 	// hexes half lengths
 	private int x_half_length = 1;
@@ -1396,6 +1697,63 @@ public class BoardPanel extends JPanel
 			token_radius = 1;
 	}
 	
+	// method to get bounding rectangles for state = 0 (setup phase)
+	public void set_setup_bounds()
+	{
+		// hexes rectangle
+		int low_x = (int)hexes_points[3].x - x_half_length;
+		int low_y = (int)hexes_points[3].y - y_half_length;
+		
+		int high_x = (int)hexes_points[2].x + x_half_length;
+		int high_y = (int)hexes_points[2].y + y_half_length;
+		
+		hex_rect_top_left.move(low_x, low_y);
+		hex_rect_bot_right.move(high_x, high_y);
+		
+		// tokens rectangle
+		low_x = (int)token_points[0].x - token_radius;
+		low_y = (int)token_points[0].y - token_radius;
+		
+		high_x = (int)token_points[6].x + token_radius;
+		high_y = (int)token_points[6].y + token_radius;
+		
+		token_rect_top_left.move(low_x, low_y);
+		token_rect_bot_right.move(high_x, high_y);
+		
+		// ports rectangle
+		low_x = (int)port_points[3].x - port_x_length;
+		low_y = (int)port_points[3].y - port_y_length;
+		
+		high_x = (int)port_points[2].x + port_x_length;
+		high_y = (int)port_points[2].y + port_y_length;
+		
+		port_rect_top_left.move(low_x, low_y);
+		port_rect_bot_right.move(high_x, high_y);
+	}
+	
+	// main paint method
+	public void paintComponent(Graphics g)
+	{
+		super.paintComponent(g);
+		
+		Graphics2D g2D = (Graphics2D)g;
+		
+		set_board_lengths();
+		
+		if (state == 0)
+		{
+			set_setup_bounds();
+		}
+		
+		draw_board(g2D);
+		
+		if (state == 0)
+		{
+			draw_board_setup(g2D);
+			draw_held(g2D);
+		}
+	}
+	
 	// currently only supports reguler and extension boards
 	// of any length
 	// custom drawing must be done for other board types
@@ -1435,9 +1793,9 @@ public class BoardPanel extends JPanel
 					int x_dist = x_margin + x_dist_edge;
 					int y_dist = y_margin + y_half_length*(r + 1 + 2*j);
 					
-					drawHex(g, x_dist, y_dist, x_half_length, y_half_length, true, tiles[i][j]);
-					
 					hex_center[i][j].move(x_dist, y_dist);
+					drawHex(g, x_dist, y_dist, x_half_length, y_half_length, true, tiles[i][j]);
+				
 					// bounds 
 					int top_y_index = 2*i;
 					
@@ -1469,41 +1827,48 @@ public class BoardPanel extends JPanel
 			}
 			
 			// edges
-			int mid = edges.length/2;
-			
 			for (int i = 0; i < edges.length; i++)
 			{
-				int dir = 1; // 1 means up first, 0 means down first
-				if (i > mid)
+				for (int j = 0; j < edges[i].length; j++)
 				{
-					dir = 0;
-				}
-				
-				if (i % 2 == 0)
-				{
-					for (int j = 0; j < edges[i].length; j++)
+					NodeEdge node = edges[i][j].node_edge;
+					
+					Vertex v0 = node.vertices[0].vertex;
+					Vertex v1 = node.vertices[1].vertex;
+					
+					int v0index[] = v0.get_index();
+					int v1index[] = v1.get_index();
+					
+					int v0_x = vertex_bounds[v0index[0]][v0index[1]].x;
+					int v0_y = vertex_bounds[v0index[0]][v0index[1]].y;
+					int v1_x = vertex_bounds[v1index[0]][v1index[1]].x;
+					int v1_y = vertex_bounds[v1index[0]][v1index[1]].y;
+					
+					drawEdge(g, v0_x, v0_y, v1_x, v1_y, edges[i][j]);
+					
+					// if there is a port and its on the border
+					Tile t = node.get_border_hex();
+					if (edges[i][j].get_port() > -1 && t != null)
 					{
-						int l_j = j/2;
-						int r_j = (j+1)/2;
-							
-						if (dir == 1)
-						{
-							
-							drawEdge(g, vertex_bounds[i + 1][l_j].x, vertex_bounds[i + 1][l_j].y, vertex_bounds[i][r_j].x, vertex_bounds[i][r_j].y, edges[i][j]);
-							dir = 0;
-						}
-						else
-						{
-							drawEdge(g, vertex_bounds[i][l_j].x, vertex_bounds[i][l_j].y, vertex_bounds[i + 1][r_j].x, vertex_bounds[i + 1][r_j].y, edges[i][j]);
-							dir = 1;
-						}
-					}
-				}
-				else
-				{
-					for (int j = 0; j < edges[i].length; j++)
-					{
-						drawEdge(g,vertex_bounds[i][j].x, vertex_bounds[i][j].y, vertex_bounds[i + 1][j].x, vertex_bounds[i + 1][j].y, edges[i][j]);
+						int t_index[] = t.get_index();
+						int hex_x = hex_center[t_index[0]][t_index[1]].x;
+						int hex_y = hex_center[t_index[0]][t_index[1]].y;
+						
+						int vec0_x = v0_x - hex_x;
+						int vec0_y = v0_y - hex_y;
+						int vec1_x = v1_x - hex_x;
+						int vec1_y = v1_y - hex_y;
+						
+						int port_x = v1_x + vec0_x;
+						int port_y = v1_y + vec0_y;
+						
+						int port = edges[i][j].get_port();
+						int in = 2;
+						if (port == 5)
+							in = 3;
+						
+						int out = 1;
+						drawPort(g, port_x, port_y, port_x_length, port_y_length, edges[i][j], port, in, out);
 					}
 				}
 			}
@@ -1530,6 +1895,7 @@ public class BoardPanel extends JPanel
 					int x_dist = x_margin + x_half_length*(r + 1 + 2*j);
 					int y_dist = y_margin + y_dist_edge;
 					
+					hex_center[i][j].move(x_dist, y_dist);
 					drawHex(g, x_dist, y_dist, x_half_length, y_half_length, false, tiles[i][j]);
 					
 					// set bounds for tiles
@@ -1565,80 +1931,51 @@ public class BoardPanel extends JPanel
 			}
 			
 			// edges
-			int mid = edges.length/2;
-			
 			for (int i = 0; i < edges.length; i++)
 			{
-				int dir = 1; // 1 means up first, 0 means down first
-				if (i > mid)
+				for (int j = 0; j < edges[i].length; j++)
 				{
-					dir = 0;
-				}
-				
-				if (i % 2 == 0)
-				{
-					for (int j = 0; j < edges[i].length; j++)
+					NodeEdge node = edges[i][j].node_edge;
+					
+					Vertex v0 = node.vertices[0].vertex;
+					Vertex v1 = node.vertices[1].vertex;
+					
+					int v0index[] = v0.get_index();
+					int v1index[] = v1.get_index();
+					
+					int v0_x = vertex_bounds[v0index[0]][v0index[1]].x;
+					int v0_y = vertex_bounds[v0index[0]][v0index[1]].y;
+					int v1_x = vertex_bounds[v1index[0]][v1index[1]].x;
+					int v1_y = vertex_bounds[v1index[0]][v1index[1]].y;
+					
+					drawEdge(g, v0_x, v0_y, v1_x, v1_y, edges[i][j]);
+					
+					// if there is a port and its on the border
+					Tile t = node.get_border_hex();
+					if (edges[i][j].get_port() > -1 && t != null)
 					{
-						int l_j = j/2;
-						int r_j = (j+1)/2;
-							
-						if (dir == 1)
-						{
-							
-							drawEdge(g, vertex_bounds[i + 1][l_j].x, vertex_bounds[i + 1][l_j].y, vertex_bounds[i][r_j].x, vertex_bounds[i][r_j].y, edges[i][j]);
-							dir = 0;
-						}
-						else
-						{
-							drawEdge(g, vertex_bounds[i][l_j].x, vertex_bounds[i][l_j].y, vertex_bounds[i + 1][r_j].x, vertex_bounds[i + 1][r_j].y, edges[i][j]);
-							dir = 1;
-						}
+						int t_index[] = t.get_index();
+						int hex_x = hex_center[t_index[0]][t_index[1]].x;
+						int hex_y = hex_center[t_index[0]][t_index[1]].y;
+						
+						int vec0_x = v0_x - hex_x;
+						int vec0_y = v0_y - hex_y;
+						int vec1_x = v1_x - hex_x;
+						int vec1_y = v1_y - hex_y;
+						
+						int port_x = v1_x + vec0_x;
+						int port_y = v1_y + vec0_y;
+						
+						int port = edges[i][j].get_port();
+						int in = 2;
+						if (port == 5)
+							in = 3;
+						
+						int out = 1;
+						drawPort(g, port_x, port_y, port_x_length, port_y_length, edges[i][j], port, in, out);
 					}
 				}
-				else
-				{
-					for (int j = 0; j < edges[i].length; j++)
-					{
-						drawEdge(g,vertex_bounds[i][j].x, vertex_bounds[i][j].y, vertex_bounds[i + 1][j].x, vertex_bounds[i + 1][j].y, edges[i][j]);
-					}
-				}
 			}
-			
-			// old edge drawing code
-			/*
-			int mid = edges.length/2;
-			for (int j = 0; j < edges[mid].length; j++)
-			{
-				drawEdge(g, bounds[mid][j].x, bounds[mid][j].y, bounds[mid + 1][j].x, bounds[mid + 1][j].y, edges[mid][j]);
-			}
-			
-			for (int j = 0; j < edges[mid - 1].length/2; j++)
-			{
-				drawEdge(g, bounds[mid][j].x, bounds[mid][j].y, bounds[mid - 1][j].x, bounds[mid - 1][j].y, edges[mid - 1][2*j]);
-				drawEdge(g, bounds[mid - 1][j].x, bounds[mid - 1][j].y, bounds[mid][j + 1].x, bounds[mid][j + 1].y, edges[mid - 1][2*j + 1]);
-				
-				drawEdge(g, bounds[mid + 1][j].x, bounds[mid + 1][j].y, bounds[mid + 2][j].x, bounds[mid + 2][j].y, edges[mid + 1][2*j]);
-				drawEdge(g, bounds[mid + 2][j].x, bounds[mid + 2][j].y, bounds[mid + 1][j + 1].x, bounds[mid + 1][j + 1].y, edges[mid + 1][2*j + 1]);
-			}
-			
-			for (int i = 1; i < len; i++)
-			{
-				for (int j = 0; j < edges[mid - 2*i].length; j++)
-				{
-					drawEdge(g, bounds[mid - 2*i][j].x, bounds[mid - 2*i][j].y, bounds[mid - 2*i + 1][j].x, bounds[mid - 2*i + 1][j].y, edges[mid - 2*i][j]);
-					drawEdge(g, bounds[mid + 2*i][j].x, bounds[mid + 2*i][j].y, bounds[mid + 2*i + 1][j].x, bounds[mid + 2*i + 1][j].y, edges[mid + 2*i][j]);
-				}
-				
-				for (int j = 0; j < edges[mid - 2*i - 1].length/2; j++)
-				{
-					drawEdge(g, bounds[mid - 2*i][j].x, bounds[mid - 2*i][j].y, bounds[mid - 2*i - 1][j].x, bounds[mid - 2*i - 1][j].y, edges[mid - 2*i - 1][2*j]);
-					drawEdge(g, bounds[mid - 2*i - 1][j].x, bounds[mid - 2*i - 1][j].y, bounds[mid - 2*i][j + 1].x, bounds[mid - 2*i][j + 1].y, edges[mid - 2*i - 1][2*j + 1]);
-					
-					drawEdge(g, bounds[mid + 2*i + 1][j].x, bounds[mid + 2*i + 1][j].y, bounds[mid + 2*i + 2][j].x, bounds[mid + 2*i + 2][j].y, edges[mid + 2*i - 1][2*j]);
-					drawEdge(g, bounds[mid + 2*i + 2][j].x, bounds[mid + 2*i + 2][j].y, bounds[mid + 2*i + 1][j + 1].x, bounds[mid + 2*i + 1][j + 1].y, edges[mid + 2*i - 1][2*j + 1]);
-					
-				}
-			}*/
 			
 			// vertices
 			for (int i = 0; i < vertices.length; i++)
@@ -1713,14 +2050,51 @@ public class BoardPanel extends JPanel
 			
 			int y_low = y - y_setup_margin - 2*port_y_length;
 			
-			port_points[i].move(x, y_low);
 			int in = 2;
 			if (i == 2) // adjust for 'any' port
 				in = 3;
-				
+			
+			port_points[i + 3].move(x, y_low);
 			drawPort(g, x, y_low, port_x_length, port_y_length, null, i + 3, in, 1);
 			
 			x += x_setup_margin + 2*port_x_length;
+		}
+		
+		// draw robber
+		x = 4*x_setup_margin + x_setup_margin + 6*x_half_length + 10*token_radius + 5*x_setup_margin + token_radius;
+		
+		y = height - y_setup_margin - 2*token_radius;
+		
+		robber_point.move(x,y);
+		drawToken(g, x, y, token_radius, 5, -1, true);
+	}
+	
+	// draws whatever is 'held' at the moment
+	public void draw_held(Graphics2D g)
+	{
+		if (state == 0)
+		{
+			if (item_held == 0) // hex held
+			{
+				drawHex(g, mouse_x, mouse_y, x_half_length, y_half_length, rotate, new Tile(item_index, -1, -1, -1));
+			}
+			else if (item_held == 1) // token held
+			{
+				drawToken(g, mouse_x, mouse_y, token_radius, 5, item_index, false);
+			}
+			else if (item_held == 2) // port held
+			{
+				int in = 2;
+				if (item_index == 5) // any port
+					in = 3;
+				
+				int out = 1;
+				drawPort(g, mouse_x, mouse_y, port_x_length, port_y_length, null, item_index, in, out);
+			}
+			else if (item_held == 3) // robber held
+			{
+				drawToken(g, mouse_x, mouse_y, token_radius, 5, -1, true);
+			}
 		}
 	}
 	
@@ -1942,24 +2316,26 @@ public class BoardPanel extends JPanel
 			drawToken(g, x0, y0, token_radius, 5, number, tile.get_robber());
 		}
 		
-		// if this is the selected tile draw transparent red over it
-		int index[] = tile.get_index();
-		if (hex_selected_i == index[0] && hex_selected_j == index[1])
+		if (collision_debug)
 		{
-			g.setColor(TRANS_RED);
-			
-			g.fillPolygon(tri0_x, tri0_y, 3);
-			
-			if (rotate)
+			int index[] = tile.get_index();
+			if (hex_selected_i == index[0] && hex_selected_j == index[1])
 			{
-				g.fillRect(x0 - x_half_length/2, y0 - y_half_length, x_half_length, 2*y_half_length);
+				g.setColor(TRANS_RED);
+				
+				g.fillPolygon(tri0_x, tri0_y, 3);
+				
+				if (rotate)
+				{
+					g.fillRect(x0 - x_half_length/2, y0 - y_half_length, x_half_length, 2*y_half_length);
+				}
+				else
+				{
+					g.fillRect(x0 - x_half_length, y0 - y_half_length/2, 2*x_half_length, y_half_length);
+				}
+		
+				g.fillPolygon(tri1_x, tri1_y, 3);
 			}
-			else
-			{
-				g.fillRect(x0 - x_half_length, y0 - y_half_length/2, 2*x_half_length, y_half_length);
-			}
-	
-			g.fillPolygon(tri1_x, tri1_y, 3);
 		}
 	}
 	
@@ -2102,13 +2478,16 @@ public class BoardPanel extends JPanel
 		
 		g.drawLine(x0,y0,x1,y1);
 		
-		int index[] = edge.get_index();
-		if (edge_selected_i == index[0] && edge_selected_j == index[1])
+		if (collision_debug)
 		{
-			g.setColor(TRANS_RED);
-			g.setStroke(new BasicStroke(edge_width + 2));
-			
-			g.drawLine(x0,y0,x1,y1);
+			int index[] = edge.get_index();
+			if (edge_selected_i == index[0] && edge_selected_j == index[1])
+			{
+				g.setColor(TRANS_RED);
+				g.setStroke(new BasicStroke(edge_width + 2));
+				
+				g.drawLine(x0,y0,x1,y1);
+			}
 		}
 	}
 	
@@ -2116,12 +2495,11 @@ public class BoardPanel extends JPanel
 	// g - graphics to draw on
 	// x0 - x coord of vertex
 	// y0 - y coord of vertex
-	// vertex - house, city, port info
+	// vertex - house, city info
 	public void drawVertex(Graphics2D g, int x0, int y0, Vertex vertex)
 	{	
 		int player = vertex.get_player();
 		int type = vertex.get_type();
-		int port = vertex.get_port();
 		
 		if (player > -1)
 		{
@@ -2140,14 +2518,17 @@ public class BoardPanel extends JPanel
 			g.fillOval(x0 - house_width, y0 - house_width, 2*house_width, 2*house_width);
 		}
 		
-		int index[] = vertex.get_index();
-		
-		// if this is currently selected draw transparent red over it
-		if (vertex_selected_i == index[0] && vertex_selected_j == index[1])
+		// only do this if we are debugging
+		if (collision_debug)
 		{
-			g.setColor(TRANS_RED);
-			
-			g.fillOval(x0 - house_width, y0 - house_width, 2*house_width, 2*house_width);
+			int index[] = vertex.get_index();
+			// if this is currently selected draw transparent red over it
+			if (vertex_selected_i == index[0] && vertex_selected_j == index[1])
+			{
+				g.setColor(TRANS_RED);
+				
+				g.fillOval(x0 - house_width, y0 - house_width, 2*house_width, 2*house_width);
+			}
 		}
 	}
 	
@@ -2163,6 +2544,26 @@ public class BoardPanel extends JPanel
 	// example in = 3, out = 1 would mean 3:1, standard question port trade
 	public void drawPort(Graphics2D g, int x0, int y0, int width, int height, Edge edge, int type, int in, int out)
 	{
+		// if edge isnt null
+		// draw it first
+		if (edge != null)
+		{
+			NodeEdge node = edge.node_edge;
+			
+			Vertex v0 = node.vertices[0].vertex;
+			Vertex v1 = node.vertices[1].vertex;
+			
+			int v0index[] = v0.get_index();
+			int v1index[] = v1.get_index();
+			
+			g.setColor(Color.BLACK);
+			
+			g.setStroke(new BasicStroke(edge_width));
+			
+			g.drawLine(vertex_bounds[v0index[0]][v0index[1]].x, vertex_bounds[v0index[0]][v0index[1]].y, x0, y0);
+			g.drawLine(vertex_bounds[v1index[0]][v1index[1]].x, vertex_bounds[v1index[0]][v1index[1]].y, x0, y0);
+		}
+		
 		// draw ship and sails
 		g.drawImage(SHIP_DECAL, x0 - width, y0 - height, 2*width, 2*height, null);
 		
@@ -2212,17 +2613,9 @@ public class BoardPanel extends JPanel
 			drawNumber(g, number_x - width/5 - height/5, number_y, height/5, in, true);
 			drawNumber(g, number_x + width/5 + height/5, number_y, height/5, out, true);
 		}
-		
-		// if edge isnt null and its on the border
-		if (edge != null)
-		{
-			NodeEdge node = edge.node_edge;
-			
-			//if ()
-		}
 	}
 	
-	// draw a house with color c, centered at x0, y0, width w
+	// draw a house with color c, centered at x0, y0 with width
 	public void drawHouse(Graphics2D g, int x0, int y0, int width, Color c)
 	{
 		g.setColor(c);
@@ -2244,7 +2637,7 @@ public class BoardPanel extends JPanel
 		g.drawLine(x0 - width, y0 + width, x0 - width, y0 - width);
 	}
 	
-	// draw city with color c, centered x0, y0, width w
+	// draw city with color c, centered x0, y0 with width 
 	public void drawCity(Graphics2D g, int x0, int y0, int width, Color c)
 	{
 		g.setColor(c);
