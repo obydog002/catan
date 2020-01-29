@@ -38,6 +38,19 @@ public class NodeEdge
 		hexes[1] = null;
 	}
 	
+	// returns the hex this edge is bordering if its on edge of board
+	// null otherwise
+	public Tile get_border_hex()
+	{
+		if (hexes[0] != null && hexes[1] != null)
+			return null;
+		
+		if (hexes[0] != null)
+			return hexes[0].tile;
+		else
+			return hexes[1].tile;
+	}
+	
 	public String neighbour_info()
 	{
 		String result = "neighbour vertices:\n";
