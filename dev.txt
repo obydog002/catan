@@ -72,6 +72,19 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 			- better team/starting position selection
 		- start screen												DONE 23/1/2020
 		- board setup panel											DONE 24/1/2020
+	- setup
+		- counts of setup items										DONE 30/1/2020
+			- test
+		- board generation/removal					
+			- boilerplate options									DONE 30/1/2020
+				- board generation									DONE 30/1/2020
+				- board removal										DONE 30/1/2020
+			- additional options
+				- port generation
+				- place tokens
+				- remove tokens
+				- finish board
+				- ...
 - Game
 	- remove modes 2 and 3											DONE 23/1/2020
 	- game logic
