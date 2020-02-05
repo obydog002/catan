@@ -29,6 +29,9 @@ public class BoardSetupPanel extends JPanel implements ActionListener
 	// generate tiles and tokens
 	private JButton generate_board;
 	
+	// removes tiles/tokens on the board
+	private JButton clear_board;
+	
 	// confirm board and start game
     private JButton confirm;
 
@@ -62,6 +65,10 @@ public class BoardSetupPanel extends JPanel implements ActionListener
 		generate_board.setActionCommand("generate");
 		generate_board.addActionListener(this);
 		
+		clear_board = new JButton("clear board");
+		clear_board.setActionCommand("clear");
+		clear_board.addActionListener(this);
+		
 		confirm = new JButton("confirm");
         confirm.setActionCommand("confirm");
 		confirm.addActionListener(this);
@@ -82,7 +89,19 @@ public class BoardSetupPanel extends JPanel implements ActionListener
 		this.add(rule6_8);
 		this.add(rotate_board);
 		this.add(generate_board);
+		this.add(clear_board);
         this.add(confirm);
+		
+		board_setup_data.regular_game = reg_settings.isSelected();
+		
+		// generate the ports initially
+		if (board_setup_data.regular_game)
+		{
+			board_panel.generate_initial_ports(board_setup_data);
+		}
+		
+		// initial board settings 
+		board_panel.change_reg_settings(board_setup_data.regular_game);
     }
 
 	// action listener
@@ -90,24 +109,28 @@ public class BoardSetupPanel extends JPanel implements ActionListener
 	{
 		String act = e.getActionCommand();
 		
+		board_setup_data.regular_game = reg_settings.isSelected();
+		board_setup_data.rule6_8 = rule6_8.isSelected();
+			
 		if (act == "rotate")
 		{
 			board_panel.toggle_rotate();
 		}
 		else if (act == "generate")
 		{
-			board_setup_data.regular_game = reg_settings.isSelected();
-			board_setup_data.rule6_8 = rule6_8.isSelected();
-			
 			board_panel.generate_board(board_setup_data);
+		}
+		else if (act == "clear")
+		{
+			board_panel.clear_board(board_setup_data);
 		}
 		else if (act == "confirm")
 		{
-			System.out.println("confirm");
+			board_panel.change_state(1);
 		}
 		else if (act == "reg_settings")
 		{
-			System.out.println("reg settings is now " + reg_settings.isSelected());
+			board_panel.change_reg_settings(reg_settings.isSelected());
 		}
 	}
 	
