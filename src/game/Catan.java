@@ -20,5 +20,11 @@ public interface Catan
 	
 	public Color[] get_player_colors();
 	
+	public void generate_ports(BoardSetupData setup);
+	
 	public void generate_board(BoardSetupData setup);
+	
+	public void clear_board();
+	
+	public int get_state();
 }
