@@ -4,7 +4,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 
-import javax.swing.JPanel;
+import javax.swing.*;
+
 import javax.imageio.ImageIO;
 
 import java.util.Random;
@@ -33,6 +34,14 @@ public class BoardPanel extends JPanel
 	// initial height
 	public static final int BOARD_HEIGHT = 500;
 	
+	// parent frame
+	private JFrame frame;
+	
+	// three JPanels that will contain instances of game data, board etc..
+	private JPanel left;
+	private JPanel middle;
+	private JPanel right;
+	
 	private Catan catan;
 	
 	private Random rng;
@@ -48,6 +57,12 @@ public class BoardPanel extends JPanel
 	// board setup
 	// ------------------------------------------------------------------
 	//
+	
+	// track if its reg_game settings or not from boardsetup
+	private boolean reg_settings;
+	
+	// to track if the current item was picked up from setup
+	private boolean setup_item = false;
 	
 	// instance variables for drawing board setup stuff
 	Tile hexes_display[];
@@ -88,9 +103,9 @@ public class BoardPanel extends JPanel
 	private boolean rotate = false;
 	
 	// handles mouse clicks
-	private static InputHandler input;
+	private InputHandler input;
 	
-	private static Color player_col[];
+	private Color player_col[];
 	
 	// what item is currently being held
 	// will depend on state, but -1 means nothing held
@@ -128,6 +143,9 @@ public class BoardPanel extends JPanel
 	
 	// enables red transparens over hexes/vertices/edges
 	private boolean collision_debug = false;
+	
+	// print information like loading of images
+	private static boolean verbose = false;
 	
 	// ------------------------------------------------------------------
 	
@@ -196,8 +214,6 @@ public class BoardPanel extends JPanel
 	private static final BufferedImage ORE_TILE = load_resource(TILE_PATH + "ore.png");
 	private static final BufferedImage DESERT_TILE = load_resource(TILE_PATH + "desert.png");
 	
-	private static boolean verbose = false;
-	
 	// load a png file, from PATH/name
 	// name - location of file relative to PATH
 	public static BufferedImage load_resource(String name)
@@ -230,9 +246,10 @@ public class BoardPanel extends JPanel
 	public void init_board_setup()
 	{
 		hexes_display = new Tile[6];
+		hexes_count = new int[6];
 		tokens_display = new int[11];
 		ports_display = new int[6];
-		robber_display = 1;
+		robber_display = 0;
 		
 		hexes_points = new Point[6];
 		token_points = new Point[11];
@@ -265,12 +282,57 @@ public class BoardPanel extends JPanel
 		}
 	}
 	
-	public BoardPanel(GameData game_data, Random rng)
+	// handles initial initialization of panels to hold game info
+	public void init_panels()
+	{
+		this.left = new JPanel(new BorderLayout());
+		this.middle = new JPanel(new BorderLayout());
+		this.right = new JPanel(new BorderLayout());
+		
+		// main panel to hold all the panels
+		JPanel main_panel = new JPanel(new GridBagLayout());
+		
+		GridBagConstraints c = new GridBagConstraints();
+		
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridwidth = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		main_panel.add(left, c);
+		
+		c.fill = GridBagConstraints.BOTH;
+		c.gridx = 1;
+		c.gridwidth = 3;
+		c.weightx = 1;
+		c.weighty = 1;
+		main_panel.add(middle, c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 4;
+		c.gridwidth = 1;
+		c.weightx = 0;
+		c.weighty = 0;
+		main_panel.add(right, c);
+		
+		frame.add(main_panel);
+		
+		frame.setLocationRelativeTo(null);
+		
+		frame.revalidate();
+		frame.pack();
+		frame.setVisible(true);
+		frame.repaint();
+	}
+	
+	public BoardPanel(GameData game_data, Random rng, JFrame frame)
 	{
 		this.rng = rng;
 		this.game_data = game_data;
+		this.frame = frame;
 		
-		state = 0;
+		init_panels();
 
 		init_board_setup();
 		
@@ -321,9 +383,92 @@ public class BoardPanel extends JPanel
 			}
 		} 
 		
+		state = 0;
+		change_state(0);
 		input = new InputHandler(this);
 	}
 	
+	// changes the board state to supplied state
+	// general purpose method that changes panels to match current state
+	public void change_state(int new_state)
+	{
+		boolean ok = true;
+		
+		// setup board panels
+		if (new_state == 0)
+		{
+			boolean reg_game = (game_data.game_mode == 0 && game_data.board_size == 3);
+			reg_game |= (game_data.game_mode == 1 && game_data.board_size == 4);
+			
+			BoardSetupPanel setup = new BoardSetupPanel(reg_game, this);
+			left.add(setup, BorderLayout.CENTER);
+			middle.add(this, BorderLayout.CENTER);
+			
+			GameInfoPanel game_info_panel = new GameInfoPanel(game_data);
+			
+			right.add(game_info_panel, BorderLayout.CENTER);
+			
+			frame.revalidate();
+			frame.pack();
+			frame.repaint();
+		} // game play
+		else if (new_state == 1)
+		{
+			// check first if the board has been set correctly
+			String error = "";
+			
+			if (!catan.get_board().check_full_set()) // board not fully set
+			{
+				ok = false;
+				error += "board has not been fully set.\n";
+			}
+			
+			
+			if (reg_settings) // if reg_settings check all resources from setup have been exhuasted
+			{
+				boolean setup_exh = true;
+				for (int i = 0; i < hexes_count.length; i++)
+				{
+					setup_exh &= (hexes_count[i] == 0);
+				}
+				
+				for (int i = 0; i < tokens_display.length; i++)
+				{
+					setup_exh &= (tokens_display[i] == 0);
+				}
+				
+				for (int i = 0; i < ports_display.length; i++)
+				{
+					setup_exh &= (ports_display[i] == 0);
+				}
+				
+				setup_exh &= (robber_display == 0);
+				
+				if (!setup_exh) // not all resources used from setup
+				{
+					ok = false;
+					error += "for regular games the board must follow the same rules as normal/extension catan.\n";
+				}
+			}
+			
+			if (ok) // good to go
+			{
+				// remove left panel
+				left.removeAll();
+				left.add(new JPanel(), BorderLayout.CENTER); // test panel for now
+				
+				frame.revalidate();
+				frame.repaint();
+			}
+			else // show error
+			{
+				JOptionPane.showMessageDialog(this, error, "Board Setup Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		
+		if (ok)
+			this.state = new_state;
+	}
 	// rotates the board
 	public void toggle_rotate()
 	{
@@ -332,12 +477,156 @@ public class BoardPanel extends JPanel
 		repaint();
 	}
 	
+	// method that changes the number of tiles/hexes left in setup mode
+	// depending on if reg_settings is true or not
+	public void change_reg_settings(boolean setting)
+	{
+		this.reg_settings = setting;
+		
+		boolean set = false;
+		if (setting)
+		{
+			// we wont ever get here unless its 3-reg or 4-ext,
+			// but it doesn't hurt to check anyway
+			if (game_data.game_mode == 0 && game_data.board_size == 3) 
+			{
+				for (int i = 0; i < Config.REG_TILES.length; i++)
+				{
+					hexes_count[i] = Config.REG_TILES[i];
+				}
+				
+				for (int i = 0; i < Config.REG_TOKENS.length; i++)
+				{
+					tokens_display[i] = Config.REG_TOKENS[i];
+				}
+				
+				for (int i = 0; i < Config.REG_PORT_COUNTS.length; i++)
+				{
+					ports_display[i] = Config.REG_PORT_COUNTS[i];
+				}
+				
+				robber_display = 1;
+				
+				set = true;
+			}
+			else if (game_data.game_mode == 1 && game_data.board_size == 4)
+			{
+				for (int i = 0; i < Config.EXT_TILES.length; i++)
+				{
+					hexes_count[i] = Config.EXT_TILES[i];
+				}
+				
+				for (int i = 0; i < Config.EXT_TOKENS.length; i++)
+				{
+					tokens_display[i] = Config.EXT_TOKENS[i];
+				}
+				
+				for (int i = 0; i < Config.EXT_PORT_COUNTS.length; i++)
+				{
+					ports_display[i] = Config.EXT_PORT_COUNTS[i];
+				}
+				
+				robber_display = 1;
+				
+				set = true;
+			}
+		}
+		
+		// subtract from current board settings
+		if (set)
+		{
+			Board board = catan.get_board();
+			Tile[][] tiles = board.get_tiles();
+			
+			for (int i = 0; i < tiles.length; i++)
+			{
+				for (int j = 0; j < tiles[i].length; j++)
+				{
+					int res = tiles[i][j].get_resource();
+					int numb = tiles[i][j].get_number();
+					boolean robber = tiles[i][j].get_robber();
+					
+					if (res > -1 && res < 6)
+					{
+						hexes_count[res]--;
+						if (hexes_count[res] < 0)
+							hexes_count[res] = 0;
+					}
+					
+					if (numb > 1 && numb < 13)
+					{
+						tokens_display[numb - 2]--;
+						if (tokens_display[numb - 2] < 0)
+							tokens_display[numb - 2] = 0;
+					}
+					
+					if (robber)
+					{
+						robber_display--;
+						if (robber_display < 0)
+							robber_display = 0;
+					}
+				}
+			}
+			
+			Edge[][] edges = board.get_edges();
+			
+			for (int i = 0; i < edges.length; i++)
+			{
+				for (int j = 0; j < edges[i].length; j++)
+				{
+					int port = edges[i][j].get_port();
+					
+					if (port > -1 && port < 6)
+					{
+						ports_display[port]--;
+						if (ports_display[port] < 0)
+							ports_display[port] = 0;
+					}
+				}
+			}
+		}
+		else // set all to -1 - special value
+		{
+			for (int i = 0; i < hexes_count.length; i++)
+			{
+				hexes_count[i] = -1;
+			}
+			
+			for (int i = 0; i < tokens_display.length; i++)
+			{
+				tokens_display[i] = -1;
+			}
+			
+			for (int i = 0; i < ports_display.length; i++)
+			{
+				ports_display[i] = -1;
+			}
+			
+			robber_display = -1;
+		}
+		
+		repaint();
+	}
+	
+	// only called if reg_settings is initially true in board_setup_panel
+	public void generate_initial_ports(BoardSetupData setup)
+	{
+		catan.generate_ports(setup);
+	}
+	
 	// a method that will generate a full board based on the setup data passed to it
 	public void generate_board(BoardSetupData setup)
 	{
 		catan.generate_board(setup);
-		
-		repaint();
+		change_reg_settings(setup.regular_game);
+	}
+	
+	// method that clears the board of all hexes/ports
+	public void clear_board(BoardSetupData setup)
+	{
+		catan.clear_board();
+		change_reg_settings(setup.regular_game);
 	}
 	
 	// process mouse pressed down
@@ -421,10 +710,14 @@ public class BoardPanel extends JPanel
 			{
 				for (int i = 0; i < 6; i++)
 				{
-					if (in_hex(x, y, hexes_points[i].x, hexes_points[i].y, x_half_length, y_half_length, rotate))
+					// check if there is any of the item 'left'
+					if (in_hex(x, y, hexes_points[i].x, hexes_points[i].y, x_half_length, y_half_length, rotate) && hexes_count[i] != 0)
 					{
 						item_held = 0;
 						item_index = i;
+						
+						if (hexes_count[i] != -1)
+							hexes_count[i]--;
 						
 						return;
 					}
@@ -437,10 +730,13 @@ public class BoardPanel extends JPanel
 				// break them into two loops
 				for (int i = 0; i < 5; i++)
 				{
-					if (in_circle(x, y, token_points[i].x, token_points[i].y, token_radius))
+					if (in_circle(x, y, token_points[i].x, token_points[i].y, token_radius) && tokens_display[i] != 0)
 					{
 						item_held = 1;
 						item_index = i + 2;
+						
+						if (tokens_display[i] != -1)
+							tokens_display[i]--;
 						
 						return;
 					}
@@ -448,10 +744,13 @@ public class BoardPanel extends JPanel
 				
 				for (int i = 6; i < 11; i++)
 				{
-					if (in_circle(x, y, token_points[i].x, token_points[i].y, token_radius))
+					if (in_circle(x, y, token_points[i].x, token_points[i].y, token_radius) && tokens_display[i] != 0)
 					{
 						item_held = 1;
 						item_index = i + 2;
+						
+						if (tokens_display[i] != -1)
+							tokens_display[i]--;
 						
 						return;
 					}
@@ -468,10 +767,13 @@ public class BoardPanel extends JPanel
 					int x_bot_right = port_points[i].x + port_x_length;
 					int y_bot_right = port_points[i].y + port_y_length;
 					
-					if (x > x_top_left && y > y_top_left && x < x_bot_right && y < y_bot_right)
+					if (x > x_top_left && y > y_top_left && x < x_bot_right && y < y_bot_right && ports_display[i] != 0)
 					{
 						item_held = 2;
 						item_index = i;
+						
+						if (ports_display[i] != -1)
+							ports_display[i]--;
 						
 						return;
 					}
@@ -479,10 +781,13 @@ public class BoardPanel extends JPanel
 			}
 			
 			// check setup robber
-			if (in_circle(x, y, robber_point.x, robber_point.y, token_radius))
+			if (in_circle(x, y, robber_point.x, robber_point.y, token_radius) && robber_display != 0)
 			{
 				item_held = 3;
 				item_index = -1;
+				
+				if (robber_display != -1)
+					robber_display--;
 				
 				return;
 			}
@@ -497,6 +802,9 @@ public class BoardPanel extends JPanel
 	{
 		mouse_x = x;
 		mouse_y = x;
+		
+		// so we know if we have to add it back
+		boolean dropped_on_board = false;
 		
 		if (state == 0) // setup phase
 		{
@@ -522,29 +830,21 @@ public class BoardPanel extends JPanel
 				{
 					if (item_held == 3) // robber
 					{
-						// later I need to set counts properly
-						
 						boolean desert = res == 5;
 						boolean tile_set = numb != -1 && res != -1;
 						
 						if ((desert || tile_set) && !rob) // either desert or the tile is set properly, no robber
 						{
 							t.set_robber(true);
-						}
-						else // don't do anything
-						{
-							
+							dropped_on_board  = true;
 						}
 					}
 					else if (item_held == 1) // token
 					{
-						if (!rob && numb == -1) // if no robber and token not set
+						if (!rob && numb == -1 && res != -1) // if no robber and token not set, but hex set
 						{
 							t.set_number(item_index);
-						}
-						else
-						{
-							
+							dropped_on_board = true;
 						}
 					}
 					else // hex
@@ -552,16 +852,9 @@ public class BoardPanel extends JPanel
 						if (!rob && numb == -1 && res == -1) // no robber, token and res not set
 						{
 							t.set_resource(item_index);
-						}
-						else
-						{
-							
+							dropped_on_board = true;
 						}
 					}
-				}
-				else // dropped nowhere
-				{
-					
 				}
 			}
 			else if (item_held == 2) // port
@@ -579,10 +872,37 @@ public class BoardPanel extends JPanel
 					if (node.get_border_hex() != null)
 					{
 						e.set_port(item_index);
+						dropped_on_board = true;
 					}
 				}
 			}
+			
+			if (!dropped_on_board)
+			{
+				if (item_held == 0)
+				{
+					if (hexes_count[item_index] != -1)
+						hexes_count[item_index]++;
+				}
+				else if (item_held == 1) // token
+				{
+					if (tokens_display[item_index - 2] != -1)
+						tokens_display[item_index - 2]++;
+				}
+				else if (item_held == 2)
+				{
+					if (ports_display[item_index] != -1)
+						ports_display[item_index]++;
+				}
+				else if (item_held == 3)
+				{
+					if (robber_display != -1)
+						robber_display++;
+				}
+			}
 		}
+		
+		
 		
 		item_held = -1;
 		item_index = -1;
@@ -2005,11 +2325,17 @@ public class BoardPanel extends JPanel
 		for (int i = 0; i < 3; i++)
 		{
 			hexes_points[i].move(x,y);
-			drawHex(g, x, y, x_half_length, y_half_length, rotate, hexes_display[i]);
+			
+			// check there is still some left
+			if (hexes_count[i] != 0)
+				drawHex(g, x, y, x_half_length, y_half_length, rotate, hexes_display[i]);
 			
 			int y_low = y - y_setup_margin - 2*y_half_length;
 			hexes_points[i + 3].move(x, y_low);
-			drawHex(g, x, y_low, x_half_length, y_half_length, rotate, hexes_display[i + 3]);
+			
+			if (hexes_count[i + 3] != 0)
+				drawHex(g, x, y_low, x_half_length, y_half_length, rotate, hexes_display[i + 3]);
+			
 			x += 2*x_half_length + x_setup_margin;
 		}
 		
@@ -2023,11 +2349,15 @@ public class BoardPanel extends JPanel
 		for (int i = 0; i < 5; i++)
 		{
 			token_points[high].move(x,y);
-			drawToken(g, x, y, token_radius, 5, high + 2, false);
+			
+			if (tokens_display[high] != 0)
+				drawToken(g, x, y, token_radius, 5, high + 2, false);
 			
 			int y_low = y - y_setup_margin - 2*token_radius;
 			token_points[low].move(x,y_low);
-			drawToken(g, x, y_low, token_radius, 5, low + 2, false);
+			
+			if (tokens_display[low] != 0)
+				drawToken(g, x, y_low, token_radius, 5, low + 2, false);
 			
 			x += x_setup_margin + 2*token_radius;
 			
@@ -2046,7 +2376,9 @@ public class BoardPanel extends JPanel
 		for (int i = 0; i < 3; i++)
 		{
 			port_points[i].move(x,y);
-			drawPort(g, x, y, port_x_length, port_y_length, null, i, 2, 1);
+			
+			if (ports_display[i] != 0)
+				drawPort(g, x, y, port_x_length, port_y_length, null, i, 2, 1);
 			
 			int y_low = y - y_setup_margin - 2*port_y_length;
 			
@@ -2055,7 +2387,9 @@ public class BoardPanel extends JPanel
 				in = 3;
 			
 			port_points[i + 3].move(x, y_low);
-			drawPort(g, x, y_low, port_x_length, port_y_length, null, i + 3, in, 1);
+			
+			if (ports_display[i + 3] != 0)
+				drawPort(g, x, y_low, port_x_length, port_y_length, null, i + 3, in, 1);
 			
 			x += x_setup_margin + 2*port_x_length;
 		}
@@ -2066,7 +2400,9 @@ public class BoardPanel extends JPanel
 		y = height - y_setup_margin - 2*token_radius;
 		
 		robber_point.move(x,y);
-		drawToken(g, x, y, token_radius, 5, -1, true);
+		
+		if (robber_display != 0)
+			drawToken(g, x, y, token_radius, 5, -1, true);
 	}
 	
 	// draws whatever is 'held' at the moment
