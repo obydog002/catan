@@ -393,7 +393,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 					game_data.poses[i] = player_options_array[i].get_pos();
 				}
 				
-				create_game_panels();
+				create_game();
 			}
 			else
 			{
@@ -402,8 +402,8 @@ public class OptionsPanel extends JPanel implements ActionListener
 		}
 	}
 	
-	// pass player data to board panels, and cause parent frame to draw board
-	public void create_game_panels()
+	// initializes boardPanel, sends parent frame
+	public void create_game()
 	{
 		removeAll();
 		
@@ -411,45 +411,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 		
 		frame.setVisible(false);
 		
-		JPanel main_panel = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		
-		boolean reg_game = (game_data.game_mode == 0 && game_data.board_size == 3) || (game_data.game_mode == 1 && game_data.board_size == 4);
-
-		BoardPanel board_panel = new BoardPanel(game_data, rng);
-		
-		BoardSetupPanel setup_panel = new BoardSetupPanel(reg_game, board_panel);
-		c.weightx = 0;
-		c.weighty = 0;
-		c.gridwidth = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = 0;
-		main_panel.add(setup_panel, c);
-		
-		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 1;
-		c.gridwidth = 3;
-		c.weightx = 1;
-		c.weighty = 1;
-		main_panel.add(board_panel, c);
-		
-		JPanel test = new JPanel();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 4;
-		c.gridwidth = 1;
-		c.weightx = 0;
-		c.weighty = 0;
-		main_panel.add(test, c);
-		
-		frame.add(main_panel);
-		
-		frame.setLocationRelativeTo(null);
-		
-		frame.revalidate();
-		frame.pack();
-		frame.setVisible(true);
-		frame.repaint();
+		BoardPanel board_panel = new BoardPanel(game_data, rng, frame);
 	}
 	
 	// takes the input and checks:
