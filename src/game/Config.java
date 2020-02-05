@@ -24,6 +24,16 @@ public abstract class Config
 	// 19 of each resource card
 	public static final int[] REG_RES_CARDS = {19,19,19,19,19};
 	
+	// port indexes for edges
+	public static final int[] REG_PORT_INDEXES_I = {0,0,2,3,5,7,8,10,10};
+	public static final int[] REG_PORT_INDEXES_J = {2,5,0,4,0,4,0,2 ,5 };
+	
+	// port values for edges
+	public static final int[] REG_PORT_VALUES = {0,5,1,3,5,4,5,2,5};
+	
+	// port counts
+	// 1 of each resource, 4 any ports
+	public static final int[] REG_PORT_COUNTS = {1,1,1,1,1,4};
 	
 	// 4 length ext board
 	// 6 wood, 5 brick, 6 sheep, 6 wheat, 5 ore, 2 desert
@@ -37,4 +47,15 @@ public abstract class Config
 	
 	// 24 of each resource card
 	public static final int[] EXT_RES_CARDS = {24,24,24,24,24};
+	
+	// port indexes
+	public static final int[] EXT_PORT_INDEXES_I = {0,0,1,3,4,6 ,7,9,12,14,14};
+	public static final int[] EXT_PORT_INDEXES_J = {2,5,0,4,0,11,0,5,0 ,2 ,5 };
+	
+	// port values
+	public static final int[] EXT_PORT_VALUES = {0,5,2,3,1,5,5,4,5,2,5};
+	
+	// port counts
+	// 1 of each except 2 for sheep, 5 for any
+	public static final int[] EXT_PORT_COUNTS = {1,1,2,1,1,5};
 }
