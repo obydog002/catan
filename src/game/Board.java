@@ -1021,6 +1021,87 @@ public class Board
 		}
 	}
 	
+	// sets the ports assuming its a 3-catan board
+	public void set_ports_reg()
+	{
+		// pedantic check
+		if (type != 0 || length != 3)
+			return;
+		
+		// clear any remaining/hidden ports
+		for (int i = 0; i < edges.length; i++)
+		{
+			for (int j = 0; j < edges[i].length; j++)
+			{
+				edges[i][j].set_port(-1);
+			}
+		}
+		
+		// sets edges according to normal catan 
+		for (int k = 0; k < Config.REG_PORT_VALUES.length; k++)
+		{
+			int i = Config.REG_PORT_INDEXES_I[k];
+			int j = Config.REG_PORT_INDEXES_J[k];
+			int port = Config.REG_PORT_VALUES[k];
+			edges[i][j].set_port(port);
+		}
+	}
+	
+	// sets ports assuming 4-ext board
+	public void set_ports_ext()
+	{
+		// check
+		if (type != 1 || length != 4)
+		{
+			return;
+		}
+		
+		// clear any remaining/hidden ports
+		for (int i = 0; i < edges.length; i++)
+		{
+			for (int j = 0; j < edges[i].length; j++)
+			{
+				edges[i][j].set_port(-1);
+			}
+		}
+		
+		// sets edges according to normal catan 
+		for (int k = 0; k < Config.EXT_PORT_VALUES.length; k++)
+		{
+			int i = Config.EXT_PORT_INDEXES_I[k];
+			int j = Config.EXT_PORT_INDEXES_J[k];
+			int port = Config.EXT_PORT_VALUES[k];
+			edges[i][j].set_port(port);
+		}
+	}
+	
+	// checks that the current board is fully set
+	// all hexes set, tokens for all non-des tile
+	public boolean check_full_set()
+	{
+		for (int i = 0; i < tiles.length; i++)
+		{
+			for (int j = 0; j < tiles[i].length; j++)
+			{
+				int res = tiles[i][j].get_resource();
+				int token = tiles[i][j].get_number();
+				if (res > -1 && res < 6)
+				{
+					if (res != 5) // desert no token
+					{
+						if (token < 2 || token > 12)
+							return false;
+					}
+					
+				}
+				else
+					return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	public void test_print()
 	{
 		for (int i = 0; i < tiles.length; i++)
@@ -1091,6 +1172,19 @@ public class Board
 					player = -1;
 				
 				vertices[i][j].set(player, type);
+			}
+		}
+	}
+	
+	// clears the board 
+	public void clear_board()
+	{
+		for (int i = 0; i < tiles.length; i++)
+		{
+			for (int j = 0; j < tiles[i].length; j++)
+			{
+				// no res, no number, no robber
+				tiles[i][j].set(-1,-1,false);
 			}
 		}
 	}
