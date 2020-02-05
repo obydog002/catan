@@ -13,15 +13,17 @@ public class GameInfoPanel extends JPanel
     public GameInfoPanel(GameData game_data)
     {
         this.setLayout(new GridLayout(0,1));
+		
         title = new JLabel("Players");
+		this.add(title);
+		
         players = new JLabel[game_data.players_amount];
-        this.add(title);
 
         for(int i = 0; i < game_data.players_amount; i++)
         {
 			players[i] = new JLabel(game_data.names[i]);
 			players[i].setOpaque(true);
-			players[i].setBackground(new Color(game_data.colors[i]).darker());
+			players[i].setBackground(new Color(game_data.colors[i]));
 			this.add(players[i]);
         }
     }
