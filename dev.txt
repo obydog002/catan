@@ -85,6 +85,10 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 				- remove tokens
 				- finish board
 				- ...
+		- board validation upon confirm
+			- checks board fully set								DONE 5/2/2020
+			- checks reg game board is correct						DONE 5/2/2020
+			- fix count bug (minor)	
 - Game
 	- remove modes 2 and 3											DONE 23/1/2020
 	- game logic
