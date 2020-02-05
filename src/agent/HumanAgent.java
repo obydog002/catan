@@ -7,9 +7,13 @@ public class HumanAgent implements Agent
 {
 	private Color color;
 	
-	public HumanAgent(Color color)
+	// name of this agent
+	private String name;
+	
+	public HumanAgent(Color color, String name)
 	{
 		this.color = color;
+		this.name = name;
 	}
 	
 	public Color get_color()

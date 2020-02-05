@@ -7,9 +7,12 @@ public class RandomAgent implements Agent
 {
 	private Color color;
 	
-	public RandomAgent(Color color)
+	private String name;
+	
+	public RandomAgent(Color color, String name)
 	{
 		this.color = color;
+		this.name = name;
 	}
 	
 	public Color get_color()
