@@ -1,6 +1,6 @@
 javac src/gui/engine/*.java
-javac src/gui/observer/*.java
+@rem javac src/gui/observer/*.java (not implemented yet)
 javac src/game/engine/*.java
-javac src/game/observer/*.java
+@rem javac src/game/observer/*.java (not implemented yet)
 javac src/game/*.java
 javac src/gui/*.java
