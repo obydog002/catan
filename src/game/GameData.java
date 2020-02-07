@@ -1,4 +1,4 @@
-package src.gui;
+package src.game;
 
 // a class to hold game data, like amount of players, board size, and so on....
 // engine_mode - engine or observer

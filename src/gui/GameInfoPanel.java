@@ -5,6 +5,8 @@ import java.awt.event.*;
 import java.awt.*;
 import java.awt.Color;
 
+import src.game.GameData;
+
 public class GameInfoPanel extends JPanel
 {
     private JLabel title;

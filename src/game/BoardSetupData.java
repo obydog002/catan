@@ -1,4 +1,4 @@
-package src.gui;
+package src.game;
 
 // a struct type class for storing data relevant to board setup
 // for use in generation and selecting manaully

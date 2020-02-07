@@ -9,6 +9,8 @@ import java.awt.event.*;
 
 import java.util.Random;
 
+import src.game.GameData;
+
 /*
 a panel that allows a user to choose options relating to the game
 what mode it is, game mode options, players,

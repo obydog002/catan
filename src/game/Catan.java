@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import src.agent.*;
 
-import src.gui.BoardSetupData;
+import src.game.BoardSetupData;
 
 // either game engine or game observer
 // essentially the difference is that the game engine simulates dice rolls, handles trades between players,

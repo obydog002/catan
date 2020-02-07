@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 
+import src.game.BoardSetupData;
+
 // a panel for setting up the board in the beginning
 // this can be its own action listener
 public class BoardSetupPanel extends JPanel implements ActionListener
