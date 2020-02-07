@@ -27,6 +27,10 @@ public class CatanMain
 		OptionsPanel options = new OptionsPanel(frame, seed);
 		frame.add(options);
 		
+		// set the image icon
+		ImageIcon img = new ImageIcon("res/sheep_icon.png");
+		frame.setIconImage(img.getImage());
+		
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
