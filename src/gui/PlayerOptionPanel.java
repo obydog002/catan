@@ -12,7 +12,7 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 {
 	private Random rng;
 	
-	private JComboBox type;
+	private JComboBox<String> type;
 	
 	// player types the player can choose
 	// human - gives control to the user of gui when it is turn
@@ -44,7 +44,7 @@ public class PlayerOptionPanel extends JPanel implements ActionListener
 		
 		this.player_num = player_num;
 		
-		type = new JComboBox(TYPES);
+		type = new JComboBox<>(TYPES);
 		type.setActionCommand("change_type");
 		type.addActionListener(this);
 		
