@@ -1,7 +1,7 @@
 package src.game;
 
 // a class to hold game data, like amount of players, board size, and so on....
-// engine_mode - engine or observer
+// engine_mode - 0 engine, 1 observer
 // game_mode - what type of game it is (0 - 4 player catan, 1 - extension)
 // board_size - size of board
 // players_amount - how many players are there
