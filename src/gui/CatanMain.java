@@ -3,6 +3,8 @@ package src.gui;
 import java.awt.*;
 import javax.swing.*;
 
+import java.util.Random;
+
 public class CatanMain
 {
 	public static void main(String[] args)
@@ -11,18 +13,24 @@ public class CatanMain
 		{
 			public void run()
 			{
-				create_and_show_GUI();
+				create_and_show_GUI(args);
 			}
 		});
 	}
 	
-	public static void create_and_show_GUI()
+	public static void create_and_show_GUI(String[] args)
 	{
 		JFrame frame = new JFrame("Options");
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		long seed = 1;
+		Random rng = new Random();
+		long seed = rng.nextLong();
+		
+		if (args.length >= 2) // try to parse the seed
+		{
+			seed = Long.parseLong(args[1]);
+		}
 		
 		OptionsPanel options = new OptionsPanel(frame, seed);
 		frame.add(options);
