@@ -7,6 +7,7 @@ import javax.swing.*;
 public class ColorBox extends JLabel
 {
 	private Color color;
+	
 	private int hex;
 	
 	public ColorBox(int hex)
