@@ -4,8 +4,9 @@ import java.util.Random;
 
 import java.awt.Color;
 
-import src.gui.GameData;
-import src.gui.BoardSetupData;
+import src.game.Config;
+import src.game.GameData;
+import src.game.BoardSetupData;
 
 import src.game.engine.State;
 
@@ -17,14 +18,11 @@ public class CatanEngine implements Catan
 {
 	private Random rng;
 	
-	Board board = null;
-		
-	private Agent[] agents;
+	private Board board = null;
 	
-	// starting order of agents
-	// order[0] - pos of agents[0], from 1 to agents.length
-	// if not set current state will be 0
-	private int[] order;
+	// order of this array is turn order of agents
+	// i.e. agents[0] is person to go first
+	private Agent[] agents;
 	
 	private GameData game_data;
 
@@ -41,6 +39,16 @@ public class CatanEngine implements Catan
 	// object to contain board and player info and to validate majority of moves
 	private State state;
 	
+	// constructor used for test purposes
+	public CatanEngine()
+	{
+		rng = new Random();
+		agents = null;
+		game_data = null;
+		current_state = 0;
+		state = null;
+	}
+	
 	public CatanEngine(GameData game_data, Random rng)
 	{
 		this.rng = rng;
@@ -50,26 +58,144 @@ public class CatanEngine implements Catan
 		
 		agents = new Agent[game_data.players_amount];
 		
+		setup(game_data.board_size, game_data.game_mode);
+		
 		// starting positions have already been decided
 		if (game_data.starting_enabled)
 		{
 			current_state = 1;
-			this.order = game_data.poses;
+			set_actual_order(game_data.poses);
 		}
 		else
 		{
 			current_state = 0;
-			this.order = new int[agents.length];
 		}
-		
-		setup(game_data.board_size, game_data.game_mode);
 	}
 
-	public void set_player_order()
+	// sequentially (1 per call) determines orders of players as per catan rules
+	// e.g. for 4 players 4 calls needed initially to determine rolls,
+	// then if any are the same those are pitted against each-other again until there is one left
+	// in those subsequent rounds set working_rolls[player] < 0 (= -1) so that it doesnt process them
+	// player - current index to process
+	// working_rolls - an array supplied at each step which has the current order being decided
+	// initially 0 means no roles on this player yet
+	// return the dice roll itself if needed, aswell as a flag
+	// flag values: (int[2] of return)
+	// -1 error, 0 : (working_rolls.length - 1) next player to roll, (working_rolls.length) process finished on current player
+	// (so current player is winner)
+	public int[] set_player_order(int player, int[] working_rolls)
 	{
+		int d1 = dice_roll();
+		int d2 = dice_roll();
 		
+		working_rolls[player] = d1 + d2;
+		
+		// counts how many -1 there are if players have been eliminated from this process
+		int j = working_rolls.length - 1;
+		while (working_rolls[j] < 0) 
+		{
+			j--;
+		}
+		
+		if (player == j) // last player rolled
+		{
+			// get max dice roll from this set
+			int max = -1;
+			for (j = 0; j < working_rolls.length; j++)
+			{
+				if (working_rolls[j] > max)
+				{
+					max = working_rolls[j];
+				}
+			}
+			
+			int players_same = 0;
+			int winner_index = 0;
+			// then check if there is 1 winner or not
+			for (j = 0; j < working_rolls.length; j++)
+			{
+				if (working_rolls[j] == max)
+				{
+					players_same++;
+					winner_index = j;
+				}
+				else
+					working_rolls[j] = -1;
+			}
+			
+			if (players_same == 1) // winner found
+			{
+				// set our agents array to reflect the order given
+				int order[] = new int[working_rolls.length];
+				j = winner_index;
+				int count = 0;
+				while (count < working_rolls.length)
+				{
+					order[j] = count;
+					
+					count++;
+					j++;
+					if (j == working_rolls.length)
+						j = 0;
+				}
+				
+				set_actual_order(order);
+				
+				return new int[] {d1, d2, working_rolls.length};
+			}
+			else // no winner found
+			{
+				// set remaining players to 0
+				for (j = 0; j < working_rolls.length; j++)
+				{
+					if (working_rolls[j] > -1)
+						working_rolls[j] = 0;
+				}
+				
+			}
+		}
+		
+		// find next player
+		j = player + 1;
+		if (j == working_rolls.length)
+			j = 0; // set back to beginning
+		
+		while (working_rolls[j] != 0)
+		{
+			j++;
+			if (j == working_rolls.length)
+				j = 0;
+		}
+		
+		return new int[] {d1, d2, j};
 	} 
 
+	// called when  the order is known through working_rolls
+	// will move the agents array to match the order given by order
+	public void set_actual_order(int[] order)
+	{
+		Agent temp[] = new Agent[order.length];
+
+		current_state = 1;
+		
+		for (int i = 0; i < order.length; i++)
+		{
+			temp[order[i]] = agents[i];
+		}
+		
+		agents = temp;
+	}
+	
+	public Agent[] get_agents()
+	{
+		return agents;
+	}
+	
+	public Agent get_agent(int index)
+	{
+		return agents[index];
+	}
+	
 	// singular dice roll
 	public int dice_roll()
 	{
@@ -94,11 +220,11 @@ public class CatanEngine implements Catan
 		
 		for (int i = 0; i < agents.length; i++)
 		{
-			if (types[i] == "Human")
+			if (types[i] == Config.AGENT_TYPES[0]) // human
 			{
 				agents[i] = new HumanAgent(new Color(game_data.colors[i]), game_data.names[i]);
 			}
-			else if (types[i] == "Random Bot")
+			else if (types[i] == Config.AGENT_TYPES[1]) // random bot
 			{
 				agents[i] = new RandomAgent(new Color(game_data.colors[i]), game_data.names[i]);
 			} 
@@ -179,5 +305,35 @@ public class CatanEngine implements Catan
 	public void clear_board()
 	{
 		board.clear_board();
+	}
+	
+	// testing of set_player_order
+	public static void main(String[] arg)
+	{
+		CatanEngine c = new CatanEngine();
+		
+		int[] order = {0,0,0,0};
+		int player = 0;
+		
+		boolean done = false;
+		while (!done)
+		{
+			int[] res = c.set_player_order(player,order);
+			
+			System.out.println("rolls: " + res[0] + "," + res[1] + "\t" + "next player: " + res[2]);
+			
+			System.out.println("order value: ");
+			for (int i = 0; i < order.length; i++)
+			{
+				System.out.print(order[i] + ",");
+			}
+			
+			System.out.println();
+			
+			if (res[2] == order.length)
+				done = true;
+			
+			player = res[2];
+		}
 	}
 }

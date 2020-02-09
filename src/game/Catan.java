@@ -24,6 +24,13 @@ public interface Catan
 	
 	public void generate_board(BoardSetupData setup);
 	
+	public int[] set_player_order(int player, int[] working_order);
+	
+	public Agent[] get_agents();
+	
+	// gets an agent by its index
+	public Agent get_agent(int index);
+	
 	public void clear_board();
 	
 	public int get_state();
