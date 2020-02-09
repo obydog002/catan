@@ -236,8 +236,8 @@ public class OptionsPanel extends JPanel implements ActionListener
 		{
 			String player_str = players_input.getText();
 			String size_str = size_input.getText();
-			boolean players_validated = true;
-			boolean size_validated = true;
+			int players_validated = 0;
+			int size_validated = 0;
 			
 			int player_lower = 1;
 			int player_upper = 1000000; // 1 million should be enough
@@ -245,42 +245,21 @@ public class OptionsPanel extends JPanel implements ActionListener
 			int size_upper = 1000000;
 			
 			boolean ok = true;
-			boolean first = true;
 			
 			players_validated = validate(player_str, player_lower, player_upper);
 			size_validated = validate(size_str, size_lower, size_upper);
 			
 			String error = "";
 			
-			if (!players_validated)
+			if (players_validated != 0)
 			{
 				ok = false;
-				
-				if (first)
-				{
-					first = false;
-				}
-				else
-				{
-					error += "\n";
-				}
-				
-				error += "Amount of players must be between " + player_lower + " and " + player_upper + ".";
+				error += "Amount of players must be between " + player_lower + " and " + player_upper + ".\n";
 			}
 			
-			if (!size_validated)
+			if (size_validated != 0)
 			{
 				ok = false;
-				
-				if (first)
-				{
-					first = false;
-				}
-				else
-				{
-					error += "\n";
-				}
-				
 				error += "Size of board must be between " + size_lower + " and " + size_upper + ".";
 			}
 			
@@ -317,7 +296,7 @@ public class OptionsPanel extends JPanel implements ActionListener
 					else
 						initial_color = rng.nextInt(POWER2_24) + 0xFF000000;
 					
-					player_options_array[i] = new PlayerOptionPanel(i + 1, initial_color, team_enabled, starting_enabled, rng);
+					player_options_array[i] = new PlayerOptionPanel(frame, i + 1, initial_color, team_enabled, starting_enabled, rng);
 					player_select_panel.add(player_options_array[i]);
 				}
 				
@@ -336,45 +315,83 @@ public class OptionsPanel extends JPanel implements ActionListener
 		}
 		else if (act == "submit2")
 		{	
-			game_data.special_building_enabled = false;
-			game_data.team_enabled = false;
-			game_data.starting_enabled = false;
-
-			if (game_data.game_mode == 1) // 6 player catan
+			game_data.special_building_enabled = special_build.isSelected();
+			game_data.team_enabled = team.isSelected();
+			game_data.starting_enabled = starting.isSelected();
+			
+			String error = "";	
+			boolean ok = true;
+			
+			// control how many times we are adding errors for different classes of errors
+			boolean added_err1 = false;
+			boolean added_err2 = false;
+			
+			int len = player_options_array.length;
+			
+			// check names aren't blank
+			for (int i = 0; i < len && ok; i++)
 			{
-				game_data.special_building_enabled = true;
-			}
-			else if (game_data.game_mode > 1) // variable type games
-			{
-				game_data.special_building_enabled = special_build.isSelected();
-				game_data.team_enabled = team.isSelected();
-				game_data.starting_enabled = starting.isSelected();
+				String name = player_options_array[i].get_name();
+				if (name == "") // blank name
+				{
+					error += "names of agents must not be blank.\n";
+					ok = false;
+				}
 			}
 			
-			boolean ok = true;
-			if (game_data.starting_enabled)
+			// validate teams if they are enabled
+			if (game_data.team_enabled)
 			{
-				// validate starting positions
-				
-				int len = player_options_array.length;
-				boolean pos_seen[] = new boolean[len];
 				for (int i = 0; i < len && ok; i++)
 				{
-					int pos = player_options_array[i].get_pos();
+					String team = player_options_array[i].get_team();
+					int er = validate(team, Integer.MIN_VALUE, Integer.MAX_VALUE); // teams can be any value
 					
-					if (pos < 1 || pos > len)
+					if (er != 0)
 					{
+						error += "teams must be a numeric value.\n";
 						ok = false;
 					}
-					else if (pos_seen[pos - 1]) // seen already
+				}
+			}
+			
+			// validate starting positions if they are being enabled
+			if (game_data.starting_enabled)
+			{
+				boolean pos_seen[] = new boolean[len];
+				for (int i = 0; i < len; i++)
+				{
+					String pos = player_options_array[i].get_pos();
+					
+					int er = validate(pos, 1, len);
+					if (er != 0) // not a number or fails the range check
 					{
+						if (!added_err1)
+						{
+							error += "starting positions must be numeric and between 1 and " + len + ".\n";
+							added_err1 = true;
+						}
+						
 						ok = false;
 					}
 					else
 					{
-						pos_seen[pos - 1] = true;
+						int parsed = parse(pos);
+						if (pos_seen[parsed - 1]) // seen already
+						{
+							if (!added_err2)
+							{
+								error += "starting positions must be unique.\n";
+								added_err2 = true;
+							}
+							
+							ok = false;
+						}
+						else
+						{
+							pos_seen[parsed - 1] = true;
+						}
 					}
-					
 				}
 			}
 			
@@ -391,15 +408,15 @@ public class OptionsPanel extends JPanel implements ActionListener
 					game_data.types[i] = player_options_array[i].get_type();
 					game_data.names[i] = player_options_array[i].get_name();
 					game_data.colors[i] = player_options_array[i].get_color();
-					game_data.teams[i] = player_options_array[i].get_team();
-					game_data.poses[i] = player_options_array[i].get_pos();
+					game_data.teams[i] = parse(player_options_array[i].get_team());
+					game_data.poses[i] = parse(player_options_array[i].get_pos()) - 1; // adjust for array based starting from 0
 				}
 				
 				create_game();
 			}
 			else
 			{
-				JOptionPane.showMessageDialog(this, "Starting positions must be from 1 to " + player_options_array.length + " and may not have repeats.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, error, "Validation Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -419,7 +436,10 @@ public class OptionsPanel extends JPanel implements ActionListener
 	// takes the input and checks:
 	// - that it is a number
 	// - it is between lower and higher, inclusive i.e [lower,higher]
-	public boolean validate(String input, int lower, int higher)
+	// 0 means its okay
+	// -1 means the string couldn't be read (not a number)
+	// -2 means the string could be read but fails the lower and higher checks
+	public int validate(String input, int lower, int higher)
 	{
 		int numb = 0;
 		try
@@ -428,9 +448,18 @@ public class OptionsPanel extends JPanel implements ActionListener
 		}
 		catch (Exception e)
 		{
-			return false;
+			return -1;
 		}
 		
-		return numb >= lower && numb <= higher;
+		if (numb >= lower && numb <= higher)
+			return 0;
+		
+		return -1;
+	}
+	
+	// parse the input
+	public int parse(String input)
+	{
+		return Integer.parseInt(input);
 	}
 }
