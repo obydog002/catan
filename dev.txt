@@ -65,10 +65,13 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 		- cards
 	- options panel and other panels								
 		- options													DONE 1/1/2020
+		- rewrote to improve validation of player options fields	DONE 8/2/2020
 		- rewrite option panel so it looks better
 		- player options											
 			- initial 												DONE 1/1/2020
 			- better color picker
+				- basebones implementation							DONE 8/2/2020
+				- add color wheel, hex sliders similar to paint.net
 			- better team/starting position selection
 		- start screen												DONE 23/1/2020
 		- board setup panel											DONE 24/1/2020
@@ -93,10 +96,13 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 	- remove modes 2 and 3											DONE 23/1/2020
 	- game logic
 		- store initial game configs for reg, ext boards			
+		- initial_order selection method
+			- implementation										DONE 8/2/2020
+			- testing
 		- special building option
 		- validate settlement/city/road building
 		- omnipresent mode (Engine)
-			- dice rolls
+			- dice rolls											DONE 9/2/2020
 			- distribute resources
 			- building options
 			- request_trade
