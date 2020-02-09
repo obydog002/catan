@@ -32,7 +32,7 @@ public class GameControlPanel extends JPanel implements ActionListener
 			
 		this.setLayout(new GridLayout(0,1));
 		
-		current_turn = new JLabel("player 1");
+		current_turn = new JLabel();
 		
 		roll_dice = new JButton("roll dice");
 		roll_dice.setActionCommand("roll");
@@ -57,25 +57,58 @@ public class GameControlPanel extends JPanel implements ActionListener
 		this.add(end_turn);
 	}
 	
+	// sets game control panel to roll_dice stage (includes initial starting order, as well as pre turn phase)
+	public void starting_order()
+	{
+		roll_dice.setEnabled(true);
+		trade.setEnabled(false);
+		buy.setEnabled(false);
+		end_turn.setEnabled(false);
+	}
+	
+	// sets game control panel to initial placement stage (also includes placing buy stage)
+	public void initial_placement()
+	{
+		roll_dice.setEnabled(false);
+		trade.setEnabled(false);
+		buy.setEnabled(false);
+		end_turn.setEnabled(false);
+	}
+	
+	// sets game control panel to turn stage
+	public void turn()
+	{
+		roll_dice.setEnabled(false);
+		trade.setEnabled(true);
+		buy.setEnabled(true);
+		end_turn.setEnabled(true);
+	}
+	
+	// sets the current turn to reflect the name of whoever is now
+	public void set_player_turn(String name)
+	{
+		current_turn.setText(name + " turn");
+	}
+	
 	public void actionPerformed(ActionEvent e)
 	{
 		String act = e.getActionCommand();
 		
 		if (act == "roll")
 		{
-			System.out.println("roll");
+			board_panel.process_roll();
 		}
 		else if (act == "trade")
 		{
-			System.out.println("trade");
+			board_panel.process_trade();
 		}
 		else if (act == "buy")
 		{
-			System.out.println("buy");
+			board_panel.process_buy();
 		}
 		else if (act == "end")
 		{
-			System.out.println("end");
+			board_panel.process_end_turn();
 		}
 	}
 }
