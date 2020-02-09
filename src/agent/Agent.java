@@ -6,5 +6,6 @@ import java.awt.Color;
 public interface Agent
 {
 	public Color get_color();
-	public Color get_alt_color();
+	
+	public String get_name();
 }

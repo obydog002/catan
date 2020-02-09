@@ -20,9 +20,9 @@ public class HumanAgent implements Agent
 	{
         return color;
     }
-    
-    public Color get_alt_color()
+	
+	public String get_name()
 	{
-		return get_color().darker();
+		return name;
 	}
 }
