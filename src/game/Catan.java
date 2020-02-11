@@ -34,4 +34,10 @@ public interface Catan
 	public void clear_board();
 	
 	public int get_state();
+	
+	public int initial_placement_next_turn(int current_player);
+	
+	public int request_road(int i, int j, int current_player);
+	
+	public int request_building(int i, int j, int current_player, int type, boolean free_house);
 }
