@@ -41,6 +41,44 @@ public class Edge
 		node_edge = null;
 	}
 
+	// checks if a road by current player can be placed here
+	// returns true if:
+	// either of the vertices contains a house that belongs to the player OR
+	// either vertex has connecting roads owned by this player
+	// returns false otherwise
+	// also return false in the case this road has already been set (duh)
+	public boolean eligable_placement(int current_player)
+	{
+		if (type == 0)
+			return false;
+		
+		NodeVertex v1 = node_edge.vertices[0];
+		NodeVertex v2 = node_edge.vertices[1];
+		
+		// check if neighbouring vertices have houses/cities to connect to
+		if ((v1.vertex.get_player() == current_player && v1.vertex.get_type() > -1) || (v2.vertex.get_player() == current_player && v2.vertex.get_type() > -1))
+			return true;
+		
+		for (int i = 0; i < 3; i++)
+		{
+			Edge e = null;
+			if (v1.edges[i] != null)
+				e = v1.edges[i].edge;
+			
+			if (e != null && e.get_player() == current_player && e.get_type() == 0) // our road
+				return true;
+				
+			e = null;
+			if (v2.edges[i] != null)
+				e = v2.edges[i].edge;
+			
+			if (e != null && e.get_player() == current_player && e.get_type() == 0) // our road
+				return true;
+		}
+		
+		return false;
+	}
+	
 	public void set_player(int player)
 	{
 		this.player = player;
