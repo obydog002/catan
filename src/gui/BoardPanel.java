@@ -50,13 +50,76 @@ public class BoardPanel extends JPanel
 	
 	// states of the game
 	// 0 - board setup
-	// 1 - choose player order
-	// 2 - game playing
+	// 1 - initial_placement
+	// 2 - game_playing
 	private int state;
+	
+	// game control
+	// ------------------------------------------------------------------
+	
+	// omnipresent game info panel
+	private GameInfoPanel game_info_panel;
+	
+	private GameControlPanel game_control_panel;
+	
+	// for initial starting order determination
+	private int[] working_order;
+	
+	// current player we are on
+	private int current_player;
+	
+	// ------------------------------------------------------------------
+	
+	// game pieces 
+	// ------------------------------------------------------------------
+	
+	// array that tracks which new houses/cities have been added to the vertices
+	// this round, so that incase of reset/ or move the vertices we can faciliate this
+	// 0 - nothing new (default and should be set to this after every turn end)
+	// 1 - house placed 
+	// 2 - city placed ontop of existing house (house not built this turn)
+	// 3 - house + city both placed this turn
+	// 4 - special value used only at the beginning of the game, acts as a free (house) placed
+	private int[][] vertex_tracker;
+	
+	// helper array
+	private boolean[][] vertex_res;
+	
+	// array that tracks new roads to edges this round
+	// false - no new road here (default)
+	// true - new road placed this turn
+	private boolean[][] edge_tracker;
+	
+	private boolean[][] edge_res;
+	
+	// how many of each piece there are to place onto the board
+	// 0 - roads
+	// 1 - houses
+	// 2 - cities
+	private int[] piece_count;
+	
+	// temporary data for placing edges
+	private Edge piece_edge;
+	
+	// bounds of pieces for collision detection
+	private Point road_middle;
+	
+	private Point house_middle;
+	
+	private Point city_middle;
+	
+	// whether initial placement has been finished
+	// roundabout way of dealing with state issues
+	private boolean initial_order_fin = false;
+	
+	// controls whether houses can be placed indepedently of connecting roads
+	// initially true as initial placement stage has agents placing where they wish
+	private boolean free_house = true;
+	
+	// ------------------------------------------------------------------
 	
 	// board setup
 	// ------------------------------------------------------------------
-	//
 	
 	// track if its reg_game settings or not from boardsetup
 	private boolean reg_settings;
@@ -65,30 +128,30 @@ public class BoardPanel extends JPanel
 	private boolean setup_item = false;
 	
 	// instance variables for drawing board setup stuff
-	Tile hexes_display[];
-	int tokens_display[]; // same as arrays in Config
-	int ports_display[];
-	int robber_display;
+	private Tile hexes_display[];
+	private int tokens_display[]; // same as arrays in Config
+	private int ports_display[];
+	private int robber_display;
 	
 	// count for how many hexes are left - this is already implicit for tokens_display and ports_display
-	int hexes_count[];
+	private int hexes_count[];
 	
 	// locations 
-	Point hexes_points[];
-	Point token_points[];
-	Point port_points[];
+	private Point hexes_points[];
+	private Point token_points[];
+	private Point port_points[];
 	
-	Point robber_point;
+	private Point robber_point;
 	
 	// bounding rectangles to make collision a bit faster
-	Point hex_rect_top_left;
-	Point hex_rect_bot_right;
+	private Point hex_rect_top_left;
+	private Point hex_rect_bot_right;
 	
-	Point token_rect_top_left;
-	Point token_rect_bot_right;
+	private Point token_rect_top_left;
+	private Point token_rect_bot_right;
 	
-	Point port_rect_top_left;
-	Point port_rect_bot_right;
+	private Point port_rect_top_left;
+	private Point port_rect_bot_right;
 	
 	// ------------------------------------------------------------------
 	
@@ -105,12 +168,15 @@ public class BoardPanel extends JPanel
 	// handles mouse clicks
 	private InputHandler input;
 	
+	// colors set after agent order has been decided
 	private Color player_col[];
 	
 	// what item is currently being held
 	// will depend on state, but -1 means nothing held
 	// state = 0 (setup phase):
 	// 0 - hex, 1 - token, 2 - port, 3 - robber
+	// state = 1 (game phase):
+	// 0 - road, 1 - house, 2 - city
 	private int item_held = -1;
 	
 	// further details of that item
@@ -135,13 +201,10 @@ public class BoardPanel extends JPanel
 	// mouse coordinates
 	private int mouse_x, mouse_y;
 	
-	private int player_selected;
-	
 	// debugging
 	// ------------------------------------------------------------------
-	//
 	
-	// enables red transparens over hexes/vertices/edges
+	// enables red transparency over hexes/vertices/edges
 	private boolean collision_debug = false;
 	
 	// print information like loading of images
@@ -282,6 +345,41 @@ public class BoardPanel extends JPanel
 		}
 	}
 	
+	// initializes data for placing pieces during build phases
+	public void init_game_pieces()
+	{
+		Board board = catan.get_board();
+		Vertex vertices[][] = board.get_vertices();
+		
+		vertex_tracker = new int[vertices.length][];
+		vertex_res = new boolean[vertices.length][];
+		for (int i = 0; i < vertices.length; i++)
+		{
+			vertex_tracker[i] = new int[vertices[i].length];
+			vertex_res[i] = new boolean[vertices[i].length];
+		}
+		
+		Edge edges[][] = board.get_edges();
+		
+		edge_tracker = new boolean[edges.length][];
+		edge_res = new boolean[edges.length][];
+		for (int i = 0; i < edges.length; i++)
+		{
+			edge_tracker[i] = new boolean[edges[i].length];
+			edge_res[i] = new boolean[edges[i].length];
+		}
+		
+		piece_edge = new Edge();
+		
+		piece_count = new int[3];
+		
+		road_middle = new Point();
+		
+		house_middle = new Point();
+		
+		city_middle = new Point();
+	}
+	
 	// handles initial initialization of panels to hold game info
 	public void init_panels()
 	{
@@ -320,6 +418,8 @@ public class BoardPanel extends JPanel
 		
 		frame.setLocationRelativeTo(null);
 		
+		frame.setTitle("catan");
+		
 		frame.revalidate();
 		frame.pack();
 		frame.setVisible(true);
@@ -328,8 +428,8 @@ public class BoardPanel extends JPanel
 	
 	public BoardPanel(GameData game_data, Random rng, JFrame frame)
 	{
-		this.rng = rng;
 		this.game_data = game_data;
+		this.rng = rng;
 		this.frame = frame;
 		
 		init_panels();
@@ -344,15 +444,11 @@ public class BoardPanel extends JPanel
 		
 		edge_selected_i = -1;
 		edge_selected_j = -1;
-		
-		player_selected = 0;
 
 		Dimension pref = new Dimension(BOARD_WIDTH + 2*BOARD_WIDTH_MARGIN, BOARD_HEIGHT + BOARD_HEIGHT_MARGIN_TOP + BOARD_HEIGHT_MARGIN_BOTTOM);
 		this.setPreferredSize(pref);
 		
 		catan = new CatanEngine(game_data, rng);
-		
-		player_col = catan.get_player_colors();
 		
 		x_half_length = 0;
 		y_half_length = 0;
@@ -383,13 +479,34 @@ public class BoardPanel extends JPanel
 			}
 		} 
 		
+		init_game_pieces();
+		
+		this.game_info_panel = new GameInfoPanel(game_data);
+		
 		state = 0;
-		change_state(0);
+		change_state(0); // board placement stage
+		
+		this.game_control_panel = new GameControlPanel(this);
+		
+		// initial positions have been set already
+		if (catan.get_state() == 1)
+		{
+			set_initial_placement();
+			
+			initial_order_fin = true;
+		}
+		else // not yet
+		{
+			game_control_panel.roll_dice();
+			working_order = new int[game_data.players_amount];
+			game_info_panel.set_order(catan.get_agents());
+		}
+		
 		input = new InputHandler(this);
 	}
 	
 	// changes the board state to supplied state
-	// general purpose method that changes panels to match current state
+	// general purpose method that changes panels to match current 
 	public void change_state(int new_state)
 	{
 		boolean ok = true;
@@ -404,15 +521,13 @@ public class BoardPanel extends JPanel
 			left.add(setup, BorderLayout.CENTER);
 			middle.add(this, BorderLayout.CENTER);
 			
-			GameInfoPanel game_info_panel = new GameInfoPanel(game_data);
-			
 			right.add(game_info_panel, BorderLayout.CENTER);
 			
 			frame.revalidate();
 			frame.pack();
 			frame.repaint();
-		} // game play
-		else if (new_state == 1)
+		} 
+		else if (new_state == 1) // initial_placement
 		{
 			// check first if the board has been set correctly
 			String error = "";
@@ -455,7 +570,12 @@ public class BoardPanel extends JPanel
 			{
 				// remove left panel
 				left.removeAll();
-				left.add(new JPanel(), BorderLayout.CENTER); // test panel for now
+				left.add(game_control_panel, BorderLayout.CENTER);
+				
+				// add current player to first in list
+				game_info_panel.update_info(0, " current turn");
+				
+				game_control_panel.set_player_turn(catan.get_agent(0).get_name());
 				
 				frame.revalidate();
 				frame.repaint();
@@ -465,10 +585,22 @@ public class BoardPanel extends JPanel
 				JOptionPane.showMessageDialog(this, error, "Board Setup Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
+		else if (new_state == 2) // game play
+		{
+			game_control_panel.roll_dice();
+			
+			current_player = 0; // enforce 
+			game_control_panel.set_player_turn(catan.get_agent(0).get_name());
+			game_info_panel.update_info(0, " current turn");
+			
+			frame.revalidate();
+			frame.repaint();
+		}
 		
 		if (ok)
 			this.state = new_state;
 	}
+	
 	// rotates the board
 	public void toggle_rotate()
 	{
@@ -476,6 +608,181 @@ public class BoardPanel extends JPanel
 		
 		repaint();
 	}
+	
+	// methods that handle game interaction
+	// ------------------------------------------------------------------
+	
+	// handles dice_roll button call
+	public void process_roll()
+	{
+		// CatanEngine
+		if (game_data.engine_mode == 0)
+		{
+			// decide order stage
+			if (catan.get_state() == 0)
+			{
+				int[] res = catan.set_player_order(current_player, working_order);
+				
+				src.gui.engine.DiceDialog dialog = new src.gui.engine.DiceDialog(frame, res[0], res[1]);
+				dialog.run();
+				
+				game_info_panel.update_info(current_player, " roll: " + (res[0] + res[1]));
+				
+				if (res[2] < current_player) // its been reset, we can mark everyone thats not in with '-'
+				{
+					for (int i = 0; i < working_order.length; i++)
+					{
+						if (working_order[i] < 0)
+						{
+							game_info_panel.update_info(i, " -");
+						}
+						else
+						{
+							game_info_panel.update_info(i, " ");
+						}
+					}
+				}
+				
+				game_control_panel.set_player_turn(catan.get_agent(current_player).get_name());
+				
+				current_player = res[2];
+
+				if (res[2] == working_order.length) // finished
+				{
+					set_initial_placement();
+				}
+				
+				game_info_panel.update_info(current_player, " current turn");
+				
+				game_control_panel.set_player_turn(catan.get_agent(current_player).get_name());
+				
+			}
+			else // turn stage
+			{
+				
+			}
+		}
+		else // observer
+		{
+			
+		}
+	}
+	
+	// handles trade button call
+	public void process_trade()
+	{
+		
+	}
+	
+	// handles buy button call
+	public void process_buy()
+	{
+		
+	}
+	
+	// handles playing development cards
+	public void process_dev()
+	{
+		
+	}
+	
+	// handles end_turn button call
+	public void process_end_turn()
+	{
+		if (state == 1) // initial_placement
+		{
+			// check all pieces have been exhuasted
+			boolean ok = true;
+			for (int i = 0; i < 3; i++)
+			{
+				if (piece_count[i] > 0)
+					ok = false;
+			}
+			
+			if (ok)
+			{	
+				// reset the tracker arrays
+				for (int i = 0; i < vertex_tracker.length; i++)
+				{
+					for (int j = 0; j < vertex_tracker[i].length; j++)
+					{
+						vertex_tracker[i][j] = 0;
+					}
+				}
+				
+				for (int i = 0; i < edge_tracker.length; i++)
+				{
+					for (int j = 0; j < edge_tracker[i].length; j++)
+					{
+						edge_tracker[i][j] = false;
+					}
+				}
+					
+				game_info_panel.update_info(current_player, "");
+				current_player = catan.initial_placement_next_turn(current_player);
+					
+				if (current_player != -1) // not finished yet
+				{
+					piece_count[0] = 1; // 1 road
+					piece_count[1] = 1; // 1 house
+					piece_count[2] = 0;
+
+					// this is the last player so they get 2 settlements/roads
+					if (current_player == game_data.players_amount - 1)
+					{
+						piece_count[0] = 2;
+						piece_count[1] = 2;
+					}
+				
+					game_control_panel.set_player_turn(catan.get_agent(current_player).get_name());
+					game_info_panel.update_info(current_player, " current turn");
+				}
+				else
+				{
+					change_state(2); // change to game_play state
+				}
+					
+				repaint();
+			}
+			else // not okay
+			{
+				JOptionPane.showMessageDialog(this, "Please place all remaining pieces.", "remaining pieces present", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		else
+		{
+			
+		}
+	}
+	
+	// called when its time to do initial placement of pieces
+	public void set_initial_placement()
+	{
+		game_control_panel.initial_placement();
+		game_info_panel.set_order(catan.get_agents());
+		current_player = 0;
+		player_col = catan.get_player_colors();
+					
+		initial_order_fin = true;
+		
+		// niche situation where there is only 1 player
+		if (game_data.players_amount == 1)
+		{
+			piece_count[0] = 2;
+			piece_count[1] = 2;
+		}
+		else
+		{
+			piece_count[0] = 1; // 1 road
+			piece_count[1] = 1; // 1 house
+		}
+		
+		piece_count[2] = 0;
+					
+		repaint();
+	}
+	
+	// ------------------------------------------------------------------
 	
 	// method that changes the number of tiles/hexes left in setup mode
 	// depending on if reg_settings is true or not
@@ -795,6 +1102,146 @@ public class BoardPanel extends JPanel
 			item_held = -1;
 			item_index = -1;
 		}
+		else if (state == 1) // game playing phase
+		{
+			boolean got = false;
+			
+			// check vertices
+			find_board_vertex(x, y);
+			
+			// found vertex
+			if (vertex_selected_i != -1 && vertex_selected_j != -1)
+			{
+				Vertex vertices[][] = board.get_vertices();
+				
+				int i = vertex_selected_i;
+				int j = vertex_selected_j;
+				
+				if (vertex_tracker[i][j] == 3) // house and city placed, city removed
+				{
+					vertices[i][j].set(current_player, 0);
+					
+					vertex_tracker[i][j] = 1; // now just a house
+					
+					item_held = 2;
+					
+					got = true;
+				}
+				else if (vertex_tracker[i][j] == 2) // new city placed and removed
+				{
+					vertices[i][j].set(current_player, 0);
+					
+					vertex_tracker[i][j] = 0; // nothing new if city removed
+					
+					item_held = 2;
+					
+					got = true;
+				}
+				else if (vertex_tracker[i][j] == 1 || vertex_tracker[i][j] == 4) // new house placed, removed
+				{
+					vertices[i][j].set(-1, -1);
+					vertex_tracker[i][j] = 0;
+					
+					item_held = 1;
+					
+					got = true;
+				}
+				// nothing to pick up here
+				
+				if (got)
+				{
+					// check that removal of this house doesn't violate integrity of board
+					catan.get_board().integrity_check(current_player, vertex_tracker, edge_tracker, vertex_res, edge_res);
+					
+					reset_bad_pieces(vertex_tracker, edge_tracker, vertex_res, edge_res);
+					
+					repaint();
+					return;
+				}
+			}
+			
+			// then check edges for roads
+			find_board_edge(x, y);
+			
+			if (edge_selected_i != -1 && edge_selected_j != -1 && edge_tracker[edge_selected_i][edge_selected_j])
+			{
+				Edge edges[][] = board.get_edges();
+				
+				edges[edge_selected_i][edge_selected_j].set_player(-1);
+				edges[edge_selected_i][edge_selected_j].set_type(-1);
+				
+				edge_tracker[edge_selected_i][edge_selected_j] = false;
+				
+				catan.get_board().integrity_check(current_player, vertex_tracker, edge_tracker, vertex_res, edge_res);
+				
+				reset_bad_pieces(vertex_tracker, edge_tracker, vertex_res, edge_res);
+				
+				item_held = 0;
+				
+				repaint();
+				
+				return;
+			}
+			
+			// now check game pieces
+			
+			int x_col_half = edge_width/2 + 2;
+			int y_col_half = y_half_length/2 + 2;
+			
+			// bounds for road piece
+			if (x > road_middle.x - x_col_half && y > road_middle.y - y_col_half && x < road_middle.x + x_col_half && y < road_middle.y + y_col_half)
+			{
+				if (piece_count[0] > 0) // more than 0 roads
+				{
+					item_held = 0;
+					piece_count[0]--;
+					
+					repaint();
+					
+					return;
+				}
+			}
+			
+			x_col_half = house_width + 2;
+			int y_top_half = 2*house_width + 2; // since the house is bigger topwise
+			y_col_half = house_width + 2;
+			
+			// house bounds
+			if (x > house_middle.x - x_col_half && y > house_middle.y - y_top_half && x < house_middle.x + x_col_half && y < house_middle.y + y_col_half)
+			{
+				if (piece_count[1] > 0) // more than 0 houses
+				{
+					item_held = 1;
+					piece_count[1]--;
+					
+					repaint();
+					
+					return;
+				}
+			}
+			
+			x_col_half = house_width + 2;
+			int x_left_half = 2*house_width + 2; // since left side is much fatter
+			y_top_half = 3*house_width + 2;
+			y_col_half = house_width + 2;
+			
+			// city bounds
+			if (x > city_middle.x - x_left_half && y > city_middle.y - y_top_half && x < city_middle.x + x_col_half && y < city_middle.y + y_col_half)
+			{
+				if (piece_count[2] > 0) // more than 0 cities
+				{
+					item_held = 2;
+					piece_count[2]--;
+					
+					repaint();
+					
+					return;
+				}
+			}
+			
+			// nothing found
+			item_held = -1;
+		}
 	}
 	
 	// process mouse released
@@ -901,12 +1348,59 @@ public class BoardPanel extends JPanel
 				}
 			}
 		}
-		
-		
+		else if (state == 1) // game phase 
+		{
+			if (item_held == 0) // road
+			{
+				find_board_edge(x, y);
+				
+				if (edge_selected_i != -1 && edge_selected_j != -1)
+				{
+					// if this succeeds a road was placed
+					if (catan.request_road(edge_selected_i, edge_selected_j, current_player) == 0) 
+					{
+						edge_tracker[edge_selected_i][edge_selected_j] = true;
+						dropped_on_board = true;
+					}
+				}
+			}
+			else if (item_held == 1 || item_held == 2) // house or city
+			{
+				find_board_vertex(x, y);
+				
+				if (vertex_selected_i != -1 && vertex_selected_j != -1)
+				{
+					if (catan.request_building(vertex_selected_i, vertex_selected_j, current_player, item_held - 1, free_house) == 0)
+					{
+						if (item_held == 1)
+						{
+							if (free_house) // initial placement stage, set house to special value
+								vertex_tracker[vertex_selected_i][vertex_selected_j] = 4;
+							else
+								vertex_tracker[vertex_selected_i][vertex_selected_j] = 1;
+						}
+						else
+						{
+							// house placed here on this turn as well so set to 3
+							if (vertex_tracker[vertex_selected_i][vertex_selected_j] == 1)
+								vertex_tracker[vertex_selected_i][vertex_selected_j] = 3;
+							else
+								vertex_tracker[vertex_selected_i][vertex_selected_j] = 2;
+						}
+						dropped_on_board = true;
+					}
+				}
+			}
+			
+			if (!dropped_on_board && item_held != -1)
+			{
+				piece_count[item_held]++;
+			}
+		}
 		
 		item_held = -1;
 		item_index = -1;
-						
+		
 		repaint();
 		return;
 	}
@@ -933,6 +1427,57 @@ public class BoardPanel extends JPanel
 			find_board_vertex(x, y);
 			
 			repaint();
+		}
+	}
+	
+	// helper method to reset houses/roads/cities if they violate the integrity
+	public void reset_bad_pieces(int[][] v_tracker, boolean[][] e_tracker, boolean[][] v_res, boolean[][] e_res)
+	{
+		Board board = catan.get_board();
+		
+		for (int i = 0; i < v_tracker.length; i++)
+		{
+			for (int j = 0; j < v_tracker[i].length; j++)
+			{
+				boolean tracked = v_tracker[i][j] == 1 || v_tracker[i][j] == 3;
+				
+				// if it was tracked but not found; remove it
+				if (tracked && !v_res[i][j])
+				{
+					Vertex vertices[][] = board.get_vertices();
+					vertices[i][j].set(-1, -1);
+					
+					piece_count[1]++;
+					
+					// also a city
+					if (v_tracker[i][j] == 3)
+						piece_count[2]++;
+					
+					v_tracker[i][j] = 0;
+				}
+				
+				v_res[i][j] = false; // reset array for future use
+			}
+		}
+		
+		for (int i = 0; i < e_tracker.length; i++)
+		{
+			for (int j = 0; j < e_tracker[i].length; j++)
+			{
+				// tracked but not found
+				if (e_tracker[i][j] && !e_res[i][j])
+				{
+					Edge edges[][] = board.get_edges();
+					edges[i][j].set_player(-1);
+					edges[i][j].set_type(-1);
+					
+					piece_count[0]++;
+					
+					e_tracker[i][j] = false;
+				}
+				
+				e_res[i][j] = false;
+			}
 		}
 	}
 	
@@ -2051,6 +2596,28 @@ public class BoardPanel extends JPanel
 		port_rect_bot_right.move(high_x, high_y);
 	}
 	
+	public void set_game_pieices_bounds()
+	{
+		Dimension dim = this.getSize();
+		
+		int height = (int)dim.getHeight() - BOARD_HEIGHT_MARGIN_BOTTOM;
+		
+		int x = 5*x_setup_margin + edge_width;
+		int y = height - (5*y_setup_margin + y_half_length/2);
+		
+		road_middle.move(x,y);
+		
+		x += 2*x_half_length/3;
+		y = height - (5*y_setup_margin + house_width);
+		
+		house_middle.move(x,y);
+		
+		x+= 2*x_half_length/3;
+		y = height - (5*y_setup_margin + house_width);
+		
+		city_middle.move(x,y);
+	}
+	
 	// main paint method
 	public void paintComponent(Graphics g)
 	{
@@ -2064,14 +2631,23 @@ public class BoardPanel extends JPanel
 		{
 			set_setup_bounds();
 		}
+		else if (state == 1 && initial_order_fin)
+		{
+			set_game_pieices_bounds();
+		}
 		
 		draw_board(g2D);
 		
 		if (state == 0)
 		{
 			draw_board_setup(g2D);
-			draw_held(g2D);
 		}
+		else if (state == 1 && initial_order_fin)
+		{
+			draw_game_pieces(g2D);
+		}
+		
+		draw_held(g2D);
 	}
 	
 	// currently only supports reguler and extension boards
@@ -2405,6 +2981,28 @@ public class BoardPanel extends JPanel
 			drawToken(g, x, y, token_radius, 5, -1, true);
 	}
 	
+	// draw game pieces for collision
+	// roads, houses, cities
+	public void draw_game_pieces(Graphics2D g)
+	{
+		int x = road_middle.x;
+		int y = road_middle.y + y_half_length/2;
+		
+		piece_edge.set_player(current_player);
+		piece_edge.set_type(0);
+		
+		if (piece_count[0] > 0) // more than 0 roads
+			drawEdge(g, x, y, x, y - y_half_length, piece_edge);
+		
+		Color c = player_col[current_player];
+		
+		if (piece_count[1] > 0) // more than 0 houses
+			drawHouse(g, house_middle.x, house_middle.y, house_width, c);
+		
+		if (piece_count[2] > 0) // more than 0 cities
+			drawCity(g, city_middle.x, city_middle.y, house_width, c);
+	}
+	
 	// draws whatever is 'held' at the moment
 	public void draw_held(Graphics2D g)
 	{
@@ -2430,6 +3028,25 @@ public class BoardPanel extends JPanel
 			else if (item_held == 3) // robber held
 			{
 				drawToken(g, mouse_x, mouse_y, token_radius, 5, -1, true);
+			}
+		}
+		else if (state == 1)
+		{
+			if (item_held == 0) // road
+			{
+				drawEdge(g, mouse_x, mouse_y - y_half_length/2, mouse_x, mouse_y + y_half_length/2, piece_edge);
+			}
+			else if (item_held == 1) // house
+			{
+				Color c = player_col[current_player];
+				
+				drawHouse(g, mouse_x, mouse_y, house_width, c);
+			}
+			else if (item_held == 2) // city
+			{
+				Color c = player_col[current_player];
+				
+				drawCity(g, mouse_x, mouse_y, house_width, c);
 			}
 		}
 	}
@@ -2977,9 +3594,6 @@ public class BoardPanel extends JPanel
 	public void drawCity(Graphics2D g, int x0, int y0, int width, Color c)
 	{
 		g.setColor(c);
-		
-		x0 += 2*width/3;
-		y0 -= 2*width/5;
 		
 		g.fillRect(x0 - 2*width, y0 - width, 3*width, 2*width);
 		g.fillRect(x0 - 2*width, y0 - 2*width, 2*width, width);
