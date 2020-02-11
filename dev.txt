@@ -103,10 +103,11 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 		- initial_order selection method
 			- implementation										DONE 8/2/2020
 			- testing
-		- special building option
-		- validate settlement/city/road building
+		- special building option					
 		- omnipresent mode (Engine)
 			- dice rolls											DONE 9/2/2020
+			- validate settlement/city/road building				DONE 11/2/2020
+			- POST methods for agents								
 			- distribute resources
 			- building options
 			- request_trade
