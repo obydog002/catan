@@ -9,21 +9,24 @@ import src.agent.Agent;
 // store info of board and other relevant info
 public class State
 {
-	private Board board;
-	private Agent[] agents;
-	
 	// what resource cards everyone holds
 	private int[][] res_held;
 	
 	// development cards held by players
+	// 0 - knight
+	// 1 - victory point
+	// 2 - monopoly
+	// 3 - road builder
+	// 4 - year of plenty
 	private int[][] dev_held;
 	
 	// scores of players
 	private int[] scores;
 	
-	
-	public State()
+	public State(int amount_players)
 	{
-		
+		res_held = new int[amount_players][5];
+		dev_held = new int[amount_players][5];
+		scores = new int[amount_players];
 	}
 }
