@@ -783,6 +783,112 @@ public class Board
 		}
 	}
 	
+	// iterates over vertices that have houses/cities, owned by cur_player, and aren't in v_tracker
+	// then performs dfs on each neighbouring edge to determine connectivity
+	// will find any edges/houses that are 'connected' given by the boolean tracker arrays
+	// will then mark them in the supplied boolean arrays res as true (connected)
+	public void integrity_check(int cur_player, int[][] v_tracker, boolean[][] e_tracker, boolean[][] v_res, boolean[][] e_res)
+	{
+		// to track visits
+		boolean[][] visit = new boolean[edges.length][];
+		
+		for (int i = 0; i < edges.length; i++)
+		{
+			visit[i] = new boolean[edges[i].length];
+		}
+
+		for (int i = 0; i < vertices.length; i++)
+		{
+			for (int j = 0; j < vertices[i].length; j++)
+			{
+				Vertex v = vertices[i][j];
+				
+				// if its ours, if it has a house/city, and if its not a house we wish to track
+				// v_tracker being 1 or 3 means a house was placed here this turn
+				boolean tracked = (v_tracker[i][j] == 1 || v_tracker[i][j] == 3);
+				if (v.get_type() > -1 && v.get_player() == cur_player && !tracked)
+				{
+					for (int k = 0; k < 3; k++)
+					{
+						if (v.node_vertex.edges[k] != null)
+						{
+							Edge e = v.node_vertex.edges[k].edge;
+							if (e.get_player() == cur_player && e.get_type() > -1)
+							{
+								integ_dfs(e, cur_player, v_tracker, e_tracker, v_res, e_res, visit);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	// the dfs helper method for integrity_check
+	// performs a single dfs over the edge supplied, marking visit fields and other fields as appropirate
+	public void integ_dfs(Edge edge, int player, int[][] v_tracker, boolean[][] e_tracker, boolean[][] v_res, boolean[][] e_res, boolean[][] visit)
+	{
+		int total_edges = 0;
+		for (int i = 0; i < edges.length; i++)
+		{
+			total_edges += edges[i].length;
+		}
+		
+		int head = -1;
+		Edge[] stack = new Edge[total_edges];
+		
+		stack[0] = edge;
+		head++;
+		
+		while (head > -1)
+		{
+			Edge e = stack[head];
+			head--;
+			
+			int[] index = e.get_index();
+			visit[index[0]][index[1]] = true;
+			
+			// found this edge
+			if (e_tracker[index[0]][index[1]])
+			{
+				e_res[index[0]][index[1]] = true;
+			}
+			
+			for (int i = 0; i < 2; i++)
+			{
+				NodeVertex v = e.node_edge.vertices[i];
+				
+				index = v.vertex.get_index();
+				
+				int val = v_tracker[index[0]][index[1]];
+				boolean tracked = val == 1 || val == 3;
+				if (v.vertex.get_type() > -1 && v.vertex.get_player() == player && tracked)
+				{
+					v_res[index[0]][index[1]] = true;
+				}
+				
+				for (int j = 0; j < 3; j++)
+				{
+					if (v.edges[j] != null)
+					{
+						Edge n = v.edges[j].edge;
+						
+						index = n.get_index();
+						if (!visit[index[0]][index[1]])
+						{
+							// has road, one of ours
+							if (n.get_type() == 0 && n.get_player() == player)
+							{
+								head++;
+								stack[head] = n;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	// a method to generate tile_setup array based on variant mode
 	public int[] get_tile_setup()
 	{
