@@ -23,6 +23,9 @@ public class GameControlPanel extends JPanel implements ActionListener
 	// buy item button
 	private JButton buy;
 	
+	// play dev card button
+	private JButton play_dev;
+	
 	// end turn button;
 	private JButton end_turn;
 	
@@ -46,6 +49,10 @@ public class GameControlPanel extends JPanel implements ActionListener
 		buy.setActionCommand("buy");
 		buy.addActionListener(this);
 		
+		play_dev = new JButton("play development card");
+		play_dev.setActionCommand("dev");
+		play_dev.addActionListener(this);
+		
 		end_turn = new JButton("end turn");
 		end_turn.setActionCommand("end");
 		end_turn.addActionListener(this);
@@ -58,21 +65,23 @@ public class GameControlPanel extends JPanel implements ActionListener
 	}
 	
 	// sets game control panel to roll_dice stage (includes initial starting order, as well as pre turn phase)
-	public void starting_order()
+	public void roll_dice()
 	{
 		roll_dice.setEnabled(true);
 		trade.setEnabled(false);
 		buy.setEnabled(false);
+		play_dev.setEnabled(false);
 		end_turn.setEnabled(false);
 	}
 	
-	// sets game control panel to initial placement stage (also includes placing buy stage)
+	// sets game control panel to initial placement stage
 	public void initial_placement()
 	{
 		roll_dice.setEnabled(false);
 		trade.setEnabled(false);
 		buy.setEnabled(false);
-		end_turn.setEnabled(false);
+		play_dev.setEnabled(false);
+		end_turn.setEnabled(true);
 	}
 	
 	// sets game control panel to turn stage
@@ -81,6 +90,7 @@ public class GameControlPanel extends JPanel implements ActionListener
 		roll_dice.setEnabled(false);
 		trade.setEnabled(true);
 		buy.setEnabled(true);
+		play_dev.setEnabled(true);
 		end_turn.setEnabled(true);
 	}
 	
@@ -105,6 +115,10 @@ public class GameControlPanel extends JPanel implements ActionListener
 		else if (act == "buy")
 		{
 			board_panel.process_buy();
+		}
+		else if (act == "dev")
+		{
+			board_panel.process_dev();
 		}
 		else if (act == "end")
 		{
