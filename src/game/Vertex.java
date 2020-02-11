@@ -41,6 +41,66 @@ public class Vertex
 		this.type = type;
 	}
 
+	// checks eligability of current placement
+	// new_type - 0 house, 1 city
+	// free_house - true means houses can be placed anywhere without road connection
+	public boolean eligable_placement(int current_player, int new_type, boolean free_house)
+	{
+		if (type > -1 && player != current_player) // something here that isn't ours
+			return false;
+		
+		// cant put a city on nothing
+		// or a city on someone's else house
+		if (new_type == 1 && (type != 0 || (type == 0 && player != current_player)))
+			return false;
+		
+		// cant put a house on another house/city
+		if (new_type == 0 && type != -1)
+			return false;
+		
+		// a few additional checks to do for houses	
+		if (new_type == 0)
+		{
+			// check we connected by a road if there is no free house
+			// for house only since we can assume by this point there is a house underneath a city
+			if (!free_house)
+			{
+				boolean road_found = false;
+				for (int i = 0; i < 3; i++)
+				{
+					if (node_vertex.edges[i] != null)
+					{
+						Edge e = node_vertex.edges[i].edge;
+						
+						if (e.get_type() == 0 && e.get_player() == current_player)
+						{
+							road_found = true; 
+							break;
+						}
+					}
+				}
+				
+				if (!road_found)
+					return false;
+			}
+			
+			// now check neighbouring vertices dont have houses on them
+			for (int i = 0; i < 3; i++)
+			{
+				if (node_vertex.vertices[i] != null)
+				{
+					Vertex v = node_vertex.vertices[i].vertex;
+					
+					// building present
+					if (v.get_type() > -1)
+						return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
 	public int get_player()
 	{
 		return player;
