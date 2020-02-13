@@ -28,6 +28,22 @@ public class Tile
 		node_hex = null;
 	}
 	
+	// deep copy constructor
+	// copies everything except for the node_hex which gets set seperately later
+	// by board methods
+	public Tile(Tile t)
+	{
+		this.resource = t.get_resource();
+		this.number = t.get_number();
+		this.robber = t.get_robber();
+		
+		int index[] = t.get_index();
+		this.i = index[0];
+		this.j = index[1];
+		
+		this.node_hex = null;
+	}
+	
 	public Tile(int i, int j)
 	{
 		this.resource = -1;

@@ -25,6 +25,18 @@ public class Vertex
 		node_vertex = null;
 	}
 	
+	public Vertex(Vertex v)
+	{
+		this.player = v.get_player();
+		this.type = v.get_type();
+		
+		int index[] = v.get_index();
+		this.i = index[0];
+		this.j = index[1];
+		
+		this.node_vertex = null;
+	}
+	
 	public Vertex(int i, int j)
 	{
 		this.player = -1;

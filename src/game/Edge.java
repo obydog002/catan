@@ -30,6 +30,17 @@ public class Edge
 		node_edge = null;
 	}
 	
+	public Edge(Edge e)
+	{
+		this.player = e.get_player();
+		this.type = e.get_type();
+		this.port = e.get_port();
+		int index[] = e.get_index();
+		
+		this.i = index[0];
+		this.j = index[1];
+	}
+	
 	public Edge(int i, int j)
 	{
 		this.player = -1;
