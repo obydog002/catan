@@ -50,8 +50,9 @@ public class BoardPanel extends JPanel
 	
 	// states of the game
 	// 0 - board setup
-	// 1 - initial_placement
-	// 2 - game_playing
+	// 1 - initial order
+	// 2 - initial_placement of pieces
+	// 3 - game_playing
 	private int state;
 	
 	// game control
@@ -107,14 +108,6 @@ public class BoardPanel extends JPanel
 	private Point house_middle;
 	
 	private Point city_middle;
-	
-	// whether initial placement has been finished
-	// roundabout way of dealing with state issues
-	private boolean initial_order_fin = false;
-	
-	// controls whether houses can be placed indepedently of connecting roads
-	// initially true as initial placement stage has agents placing where they wish
-	private boolean free_house = true;
 	
 	// ------------------------------------------------------------------
 	
@@ -175,7 +168,7 @@ public class BoardPanel extends JPanel
 	// will depend on state, but -1 means nothing held
 	// state = 0 (setup phase):
 	// 0 - hex, 1 - token, 2 - port, 3 - robber
-	// state = 1 (game phase):
+	// state = 1,2,3 (init. order/placement + game playing):
 	// 0 - road, 1 - house, 2 - city
 	private int item_held = -1;
 	
@@ -482,25 +475,11 @@ public class BoardPanel extends JPanel
 		init_game_pieces();
 		
 		this.game_info_panel = new GameInfoPanel(game_data);
-		
-		state = 0;
-		change_state(0); // board placement stage
-		
 		this.game_control_panel = new GameControlPanel(this);
 		
-		// initial positions have been set already
-		if (catan.get_state() == 1)
-		{
-			set_initial_placement();
-			
-			initial_order_fin = true;
-		}
-		else // not yet
-		{
-			game_control_panel.roll_dice();
-			working_order = new int[game_data.players_amount];
-			game_info_panel.set_order(catan.get_agents());
-		}
+		working_order = new int[game_data.players_amount];
+		
+		change_state(0); // board setup stage
 		
 		input = new InputHandler(this);
 	}
@@ -521,53 +500,23 @@ public class BoardPanel extends JPanel
 			left.add(setup, BorderLayout.CENTER);
 			middle.add(this, BorderLayout.CENTER);
 			
+			game_info_panel.set_order(catan.get_agents());
+			
 			right.add(game_info_panel, BorderLayout.CENTER);
 			
 			frame.revalidate();
 			frame.pack();
 			frame.repaint();
 		} 
-		else if (new_state == 1) // initial_placement
+		else if (new_state == 1) // initial order
 		{
-			// check first if the board has been set correctly
-			String error = "";
-			
-			if (!catan.get_board().check_full_set()) // board not fully set
-			{
-				ok = false;
-				error += "board has not been fully set.\n";
-			}
-			
-			
-			if (reg_settings) // if reg_settings check all resources from setup have been exhuasted
-			{
-				boolean setup_exh = true;
-				for (int i = 0; i < hexes_count.length; i++)
-				{
-					setup_exh &= (hexes_count[i] == 0);
-				}
-				
-				for (int i = 0; i < tokens_display.length; i++)
-				{
-					setup_exh &= (tokens_display[i] == 0);
-				}
-				
-				for (int i = 0; i < ports_display.length; i++)
-				{
-					setup_exh &= (ports_display[i] == 0);
-				}
-				
-				setup_exh &= (robber_display == 0);
-				
-				if (!setup_exh) // not all resources used from setup
-				{
-					ok = false;
-					error += "for regular games the board must follow the same rules as normal/extension catan.\n";
-				}
-			}
+			ok = board_setup_check();
 			
 			if (ok) // good to go
 			{
+				game_control_panel.roll_dice();
+				game_info_panel.set_order(catan.get_agents());
+			
 				// remove left panel
 				left.removeAll();
 				left.add(game_control_panel, BorderLayout.CENTER);
@@ -580,12 +529,36 @@ public class BoardPanel extends JPanel
 				frame.revalidate();
 				frame.repaint();
 			}
-			else // show error
+		}
+		else if (new_state == 2) // initial placement
+		{
+			// we coming here from board placement so we need to create the panels
+			// also check that the board setup is completed
+			if (state == 0) 
 			{
-				JOptionPane.showMessageDialog(this, error, "Board Setup Error", JOptionPane.ERROR_MESSAGE);
+				ok = board_setup_check();
+			
+				if (ok) // good to go
+				{
+					// remove left panel
+					left.removeAll();
+					left.add(game_control_panel, BorderLayout.CENTER);
+				
+					// add current player to first in list
+					game_info_panel.update_info(0, " current turn");
+				
+					game_control_panel.set_player_turn(catan.get_agent(0).get_name());
+				
+					frame.revalidate();
+					frame.repaint();
+				}
+			}
+			else if (state == 1) // initial order finished
+			{
+				set_initial_placement();
 			}
 		}
-		else if (new_state == 2) // game play
+		else if (new_state == 3) // game play
 		{
 			game_control_panel.roll_dice();
 			
@@ -599,6 +572,53 @@ public class BoardPanel extends JPanel
 		
 		if (ok)
 			this.state = new_state;
+	}
+	
+	// checks that the board is fully set.
+	// returns true if it is set correctly
+	// returns false otherwise and also shows an error dialog
+	public boolean board_setup_check()
+	{
+		boolean ok = true;
+		String error = "";
+			
+		if (!catan.get_board().check_full_set()) // board not fully set
+		{
+			ok = false;
+			error += "board has not been fully set.\n";
+		}
+	
+		if (reg_settings) // if reg_settings check all resources from setup have been exhuasted
+		{
+			boolean setup_exh = true;
+			for (int i = 0; i < hexes_count.length; i++)
+			{
+				setup_exh &= (hexes_count[i] == 0);
+			}
+				
+			for (int i = 0; i < tokens_display.length; i++)
+			{
+				setup_exh &= (tokens_display[i] == 0);
+			}
+			
+			for (int i = 0; i < ports_display.length; i++)
+			{
+				setup_exh &= (ports_display[i] == 0);
+			}
+				
+			setup_exh &= (robber_display == 0);
+				
+			if (!setup_exh) // not all resources used from setup
+			{
+				ok = false;
+				error += "for regular games the board must follow the same rules as normal/extension catan.\n";
+			}
+		}
+		
+		if (!ok) // show dialog
+			JOptionPane.showMessageDialog(this, error, "Board Setup Error", JOptionPane.ERROR_MESSAGE);
+			
+		return ok;
 	}
 	
 	// rotates the board
@@ -618,8 +638,7 @@ public class BoardPanel extends JPanel
 		// CatanEngine
 		if (game_data.engine_mode == 0)
 		{
-			// decide order stage
-			if (catan.get_state() == 0)
+			if (state == 1) // decide order stage
 			{
 				int[] res = catan.set_player_order(current_player, working_order);
 				
@@ -649,7 +668,7 @@ public class BoardPanel extends JPanel
 
 				if (res[2] == working_order.length) // finished
 				{
-					set_initial_placement();
+					change_state(2);
 				}
 				
 				game_info_panel.update_info(current_player, " current turn");
@@ -689,7 +708,7 @@ public class BoardPanel extends JPanel
 	// handles end_turn button call
 	public void process_end_turn()
 	{
-		if (state == 1) // initial_placement
+		if (state == 2) // initial_placement
 		{
 			// check all pieces have been exhuasted
 			boolean ok = true;
@@ -739,7 +758,7 @@ public class BoardPanel extends JPanel
 				}
 				else
 				{
-					change_state(2); // change to game_play state
+					change_state(3); // change to game_play state
 				}
 					
 				repaint();
@@ -749,7 +768,7 @@ public class BoardPanel extends JPanel
 				JOptionPane.showMessageDialog(this, "Please place all remaining pieces.", "remaining pieces present", JOptionPane.ERROR_MESSAGE);
 			}
 		}
-		else
+		else if (state == 3) // game playing
 		{
 			
 		}
@@ -762,8 +781,6 @@ public class BoardPanel extends JPanel
 		game_info_panel.set_order(catan.get_agents());
 		current_player = 0;
 		player_col = catan.get_player_colors();
-					
-		initial_order_fin = true;
 		
 		// niche situation where there is only 1 player
 		if (game_data.players_amount == 1)
@@ -1102,7 +1119,7 @@ public class BoardPanel extends JPanel
 			item_held = -1;
 			item_index = -1;
 		}
-		else if (state == 1) // game playing phase
+		else if (state == 2 || state == 3) // initial placement/ game playing phase
 		{
 			boolean got = false;
 			
@@ -1348,7 +1365,7 @@ public class BoardPanel extends JPanel
 				}
 			}
 		}
-		else if (state == 1) // game phase 
+		else if (state == 2 || state == 3) // initial placement/ game playing
 		{
 			if (item_held == 0) // road
 			{
@@ -1370,6 +1387,8 @@ public class BoardPanel extends JPanel
 				
 				if (vertex_selected_i != -1 && vertex_selected_j != -1)
 				{
+					boolean free_house = (state == 2); // initial placement has free house only
+					
 					if (catan.request_building(vertex_selected_i, vertex_selected_j, current_player, item_held - 1, free_house) == 0)
 					{
 						if (item_held == 1)
@@ -2631,7 +2650,7 @@ public class BoardPanel extends JPanel
 		{
 			set_setup_bounds();
 		}
-		else if (state == 1 && initial_order_fin)
+		else if (state == 2 || state == 3) // initial placement/game playing
 		{
 			set_game_pieices_bounds();
 		}
@@ -2642,7 +2661,7 @@ public class BoardPanel extends JPanel
 		{
 			draw_board_setup(g2D);
 		}
-		else if (state == 1 && initial_order_fin)
+		else if (state == 2 || state == 3)
 		{
 			draw_game_pieces(g2D);
 		}
@@ -3030,7 +3049,7 @@ public class BoardPanel extends JPanel
 				drawToken(g, mouse_x, mouse_y, token_radius, 5, -1, true);
 			}
 		}
-		else if (state == 1)
+		else if (state == 2 || state == 3)
 		{
 			if (item_held == 0) // road
 			{
