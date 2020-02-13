@@ -34,22 +34,33 @@ public class Board
 	// determines the dimensions of the board
 	private int length = -1;
 	
-	private Random rng;;
+	private Random rng;
 	
 	public Board(Tile tiles[][], Vertex vertices[][], Edge edges[][], int type, int length)
 	{
 		this.tiles = tiles;
 		this.vertices = vertices;
 		this.edges = edges;
+		
 		this.type = type;
 		this.length = length;
 	}
 	
+	public Board()
+	{
+		this.rng = null;
+		
+		hex_head = null;
+		
+		this.tiles = null;
+		this.vertices = null;
+		this.edges = null;
+	}
 	public Board(Random rng)
 	{
 		this.rng = rng;
 		
-		hex_head = null;
+		this.hex_head = null;
 		
 		this.tiles = null;
 		this.vertices = null;
@@ -1320,6 +1331,11 @@ public class Board
 		return length;
 	}
 
+	public Random get_rng()
+	{
+		return rng;
+	}
+	
 	// returns head, which should point to the left-top most hex 
 	// of the board
 	public NodeHex get_head()
@@ -1330,5 +1346,79 @@ public class Board
 	public int has_settlement(int i, int j)
 	{
 		return -1;// return player number;
+	}
+	
+	// A factory copy type method that allows us to get a board instance completely independent from 
+	// an original one. For security reasons, to ensure agents can't maliciously edit
+	// board variables
+	public static Board clone_board(Board original)
+	{
+		// default structure as we DON'T want the same rng
+		// otherwise agents could read the future!!!
+		Board new_board = new Board(); 
+		
+		int type = original.get_type();
+		int length = original.get_length();
+		
+		new_board.set_type_length(type, length);
+		
+		new_board.deep_copy_tiles(original.get_tiles());
+		new_board.deep_copy_vertices(original.get_vertices());
+		new_board.deep_copy_edges(original.get_edges());
+		
+		new_board.initialize_nodes_normal();
+		
+		return new_board;
+	}
+	
+	// sets type and length
+	public void set_type_length(int t, int l)
+	{
+		this.type = t;
+		this.length = l;
+	}
+	
+	// deep copies tiles to this boards tiles
+	// assuming they aren't initialized yet
+	public void deep_copy_tiles(Tile[][] t)
+	{
+		this.tiles = new Tile[t.length][];
+		for (int i = 0; i < t.length; i++)
+		{
+			this.tiles[i] = new Tile[t[i].length];
+			for (int j = 0; j < t[i].length; j++)
+			{
+				this.tiles[i][j] = new Tile(t[i][j]);
+			}
+		}
+	}
+	
+	// deep copies tiles to this boards vertices
+	public void deep_copy_vertices(Vertex[][] v)
+	{
+		this.vertices = new Vertex[v.length][];
+		for (int i = 0; i < v.length; i++)
+		{
+			this.vertices[i] = new Vertex[v[i].length];
+			for (int j = 0; j < v[i].length; j++)
+			{
+				// deep copies v[i][j]
+				this.vertices[i][j] = new Vertex(v[i][j]);
+			}
+		}
+	}
+	
+	// deep copy edges
+	public void deep_copy_edges(Edge[][] e)
+	{
+		this.edges = new Edge[e.length][];
+		for (int i = 0; i < e.length; i++)
+		{
+			this.edges[i] = new Edge[e[i].length];
+			for (int j = 0; j < e[i].length; j++)
+			{
+				this.edges[i][j] = new Edge(e[i][j]);
+			}
+		}
 	}
 }
