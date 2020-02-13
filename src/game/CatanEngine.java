@@ -426,5 +426,7 @@ public class CatanEngine implements Catan
 			
 			player = res[2];
 		}
+		
+		
 	}
 }
