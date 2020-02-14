@@ -49,6 +49,7 @@ public class CatanEngine implements Catan
 		game_data = null;
 		current_state = 0;
 		state = null;
+		current_player = 0;
 	}
 	
 	public CatanEngine(GameData game_data, Random rng)
@@ -332,6 +333,25 @@ public class CatanEngine implements Catan
 		return current_player + 1;
 	}
 	
+	// processes the current turn roll stage, returns the roll received
+	// at this point also posts the dice roll info to all agents
+	public int[] process_turn_roll()
+	{
+		int[] res = new int[] {dice_roll(), dice_roll()};
+		
+		// post later
+		
+		return res;
+	}
+	
+	public void process_turn_end()
+	{
+		current_player++;
+		if (current_player == agents.length)
+			current_player = 0;
+		
+		return;
+	}
 	
 	// these methods return -1 if cant do and 0 if successful
 	

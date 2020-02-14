@@ -35,6 +35,10 @@ public interface Catan
 	
 	public int get_state();
 	
+	public int[] process_turn_roll();
+	
+	public void process_turn_end();
+	
 	public int initial_placement_next_turn(int current_player);
 	
 	public int request_road(int i, int j, int current_player);
