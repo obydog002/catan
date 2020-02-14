@@ -10,7 +10,6 @@ public class GameControlPanel extends JPanel implements ActionListener
 	// instance variable of BoardPanel to link to
 	private BoardPanel board_panel;
 	
-	
 	// whoever's turn it is at the moment
 	private JLabel current_turn;
 	
@@ -28,6 +27,9 @@ public class GameControlPanel extends JPanel implements ActionListener
 	
 	// end turn button;
 	private JButton end_turn;
+	
+	// rotate board button
+	private JButton rotate;
 	
 	public GameControlPanel(BoardPanel board_panel)
 	{
@@ -57,11 +59,20 @@ public class GameControlPanel extends JPanel implements ActionListener
 		end_turn.setActionCommand("end");
 		end_turn.addActionListener(this);
 		
+		rotate = new JButton("rotate board");
+		rotate.setActionCommand("rotate");
+		rotate.addActionListener(this);
+		
 		this.add(current_turn);
 		this.add(roll_dice);
-		this.add(trade);
 		this.add(buy);
+		this.add(trade);
+		this.add(play_dev);
 		this.add(end_turn);
+		
+		this.add(new JLabel()); // for padding
+		
+		this.add(rotate);
 	}
 	
 	// sets game control panel to roll_dice stage (includes initial starting order, as well as pre turn phase)
@@ -123,6 +134,10 @@ public class GameControlPanel extends JPanel implements ActionListener
 		else if (act == "end")
 		{
 			board_panel.process_end_turn();
+		}
+		else if (act == "rotate")
+		{
+			board_panel.toggle_rotate();
 		}
 	}
 }
