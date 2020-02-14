@@ -11,8 +11,9 @@ public class InputHandler implements MouseListener, ActionListener, MouseMotionL
 	public InputHandler(BoardPanel panel)
 	{
 		this.panel = panel;
-		this.panel.addMouseListener(this);
-		this.panel.addMouseMotionListener(this);
+		
+		panel.addMouseListener(this);
+		panel.addMouseMotionListener(this);
 	}
 	
 	// mouse listener
