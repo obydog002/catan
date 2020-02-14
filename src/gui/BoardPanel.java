@@ -235,15 +235,25 @@ public class BoardPanel extends JPanel
 	// res/decal path
 	private static final String DECAL_PATH = File.separator + "res" + File.separator + "decal" + File.separator;
 	
-	// bufferedimages for decals
-	private static final BufferedImage WOOD_DECAL = load_resource(DECAL_PATH + "wood_dec.png");
-	private static final BufferedImage BRICK_DECAL = load_resource(DECAL_PATH + "brick_dec.png");
-	private static final BufferedImage SHEEP_DECAL = load_resource(DECAL_PATH + "sheep_dec.png");
-	private static final BufferedImage WHEAT_DECAL = load_resource(DECAL_PATH + "wheat_dec.png");
-	private static final BufferedImage ORE_DECAL = load_resource(DECAL_PATH + "ore_dec.png");
-	private static final BufferedImage SHIP_DECAL = load_resource(DECAL_PATH + "ship_dec.png");
+	// cards path
+	private static final String CARD_PATH = File.separator + "res" + File.separator + "card" + File.separator;
 	
-	//bufferedimages for misc fonts
+	// bufferedimages for cards
+	public static final BufferedImage DEV_BACK = load_resource(CARD_PATH + "dev_back.png");
+	
+	// bufferedimages for decals
+	public static final BufferedImage WOOD_DECAL = load_resource(DECAL_PATH + "wood_dec.png");
+	public static final BufferedImage BRICK_DECAL = load_resource(DECAL_PATH + "brick_dec.png");
+	public static final BufferedImage SHEEP_DECAL = load_resource(DECAL_PATH + "sheep_dec.png");
+	public static final BufferedImage WHEAT_DECAL = load_resource(DECAL_PATH + "wheat_dec.png");
+	public static final BufferedImage ORE_DECAL = load_resource(DECAL_PATH + "ore_dec.png");
+	
+	public static final BufferedImage SHIP_DECAL = load_resource(DECAL_PATH + "ship_dec.png");
+	
+	public static final BufferedImage PLUS_DECAL = load_resource(DECAL_PATH + "plus_dec.png");
+	public static final BufferedImage MINUS_DECAL = load_resource(DECAL_PATH + "minus_dec.png");
+	
+	// bufferedimages for misc fonts
 	private static final BufferedImage FONT_BLUE_QUESTION = load_resource(FONT_PATH + "blQm.png");
 	private static final BufferedImage FONT_BLACK_COLON = load_resource(FONT_PATH + "bCol.png");
 	
@@ -421,6 +431,8 @@ public class BoardPanel extends JPanel
 	
 	public BoardPanel(GameData game_data, Random rng, JFrame frame)
 	{
+		(new src.gui.engine.BuyDialog(frame, BEIGE, new int[] {4,4,4,4,4})).run();
+		
 		this.game_data = game_data;
 		this.rng = rng;
 		this.frame = frame;
@@ -562,6 +574,11 @@ public class BoardPanel extends JPanel
 		{
 			game_control_panel.roll_dice();
 			
+			// clear piece_counts just incase
+			piece_count[0] = 0;
+			piece_count[1] = 0;
+			piece_count[2] = 0;
+			
 			current_player = 0; // enforce 
 			game_control_panel.set_player_turn(catan.get_agent(0).get_name());
 			game_info_panel.update_info(0, " current turn");
@@ -678,8 +695,31 @@ public class BoardPanel extends JPanel
 			}
 			else // turn stage
 			{
+				int[] res = catan.process_turn_roll();
 				
+				src.gui.engine.DiceDialog dialog = new src.gui.engine.DiceDialog(frame, res[0], res[1]);
+				dialog.run();
+				
+				game_control_panel.turn();
+				
+				frame.revalidate();
+				frame.repaint();
 			}
+		}
+		else // Observer
+		{
+			
+		}
+	}
+	
+	// handles buy button call
+	public void process_buy()
+	{
+		// engine
+		if (game_data.engine_mode == 0)
+		{
+			src.gui.engine.BuyDialog dialog = new src.gui.engine.BuyDialog(frame, player_col[current_player], new int[] {1,1,1,1,1});
+			dialog.run();
 		}
 		else // observer
 		{
@@ -689,12 +729,6 @@ public class BoardPanel extends JPanel
 	
 	// handles trade button call
 	public void process_trade()
-	{
-		
-	}
-	
-	// handles buy button call
-	public void process_buy()
 	{
 		
 	}
@@ -765,12 +799,35 @@ public class BoardPanel extends JPanel
 			}
 			else // not okay
 			{
-				JOptionPane.showMessageDialog(this, "Please place all remaining pieces.", "remaining pieces present", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "Please place all remaining pieces.", "Remaining pieces present", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		else if (state == 3) // game playing
 		{
+			boolean ok = true;
+			for (int i = 0; i < 3; i++)
+			{
+				if (piece_count[i] > 0)
+					ok = false;
+			}
 			
+			if (ok)
+			{
+				catan.process_turn_end();
+				
+				game_info_panel.update_info(current_player, "");
+				current_player++;
+				if (current_player == game_data.players_amount)
+					current_player = 0;
+				
+				game_control_panel.set_player_turn(catan.get_agent(current_player).get_name());
+				game_control_panel.roll_dice();
+				game_info_panel.update_info(current_player, " current turn");
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(this, "Please place all remaining pieces.", "Remaining pieces present", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	}
 	
