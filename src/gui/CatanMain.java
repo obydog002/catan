@@ -36,7 +36,7 @@ public class CatanMain
 		frame.add(options);
 		
 		// set the image icon
-		ImageIcon img = new ImageIcon("res/sheep_icon.png");
+		ImageIcon img = new ImageIcon("res/icon/sheep_icon.png");
 		frame.setIconImage(img.getImage());
 		
 		frame.pack();
