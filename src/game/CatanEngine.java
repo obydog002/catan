@@ -350,6 +350,8 @@ public class CatanEngine implements Catan
 		if (current_player == agents.length)
 			current_player = 0;
 		
+		// post later
+		
 		return;
 	}
 	
