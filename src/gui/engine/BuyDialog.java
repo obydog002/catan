@@ -52,8 +52,8 @@ public class BuyDialog extends JDialog implements ActionListener
 		
 		bought = new int[4];
 		
-		// a third of parent frame 
-		Dimension third_size = new Dimension((int)dim.getWidth()/3, (int)dim.getHeight()/3);
+		// half of parent frame 
+		Dimension size = new Dimension((int)dim.getWidth()/2, (int)dim.getHeight()/2);
 		
 		for (int i = 0; i < 4; i++)
 		{
@@ -72,7 +72,7 @@ public class BuyDialog extends JDialog implements ActionListener
 		
 		// so it always fills available space
 		JPanel buffer = new JPanel(new GridLayout(1,4));
-		buffer.setPreferredSize(third_size);
+		buffer.setPreferredSize(size);
 		for (int i = 0; i < 4; i++)
 		{
 			buffer.add(buy_panel[i]);
@@ -129,13 +129,23 @@ public class BuyDialog extends JDialog implements ActionListener
 	
 	public void actionPerformed(ActionEvent e)
 	{
+		String act = e.getActionCommand();
+		
+		if (act == "cancel")
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				bought[i] = 0; // reset to 0
+			}
+		}
+		
 		dispose();
 	}
 	
-	public int run()
+	public int[] run()
 	{
 		this.setVisible(true);
 		
-		return 1;
+		return bought;
 	}
 }
