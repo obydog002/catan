@@ -19,6 +19,9 @@ public class GameControlPanel extends JPanel implements ActionListener
 	// initiate trade button
 	private JButton trade;
 	
+	// trade with ports button
+	private JButton port_trade;
+	
 	// buy item button
 	private JButton buy;
 	
@@ -27,6 +30,9 @@ public class GameControlPanel extends JPanel implements ActionListener
 	
 	// end turn button;
 	private JButton end_turn;
+	
+	// for refunding pieces if there are some present
+	private JButton refund;
 	
 	// rotate board button
 	private JButton rotate;
@@ -47,6 +53,10 @@ public class GameControlPanel extends JPanel implements ActionListener
 		trade.setActionCommand("trade");
 		trade.addActionListener(this);
 		
+		port_trade = new JButton("trade with port");
+		port_trade.setActionCommand("port");
+		port_trade.addActionListener(this);
+		
 		buy = new JButton("buy");
 		buy.setActionCommand("buy");
 		buy.addActionListener(this);
@@ -59,6 +69,15 @@ public class GameControlPanel extends JPanel implements ActionListener
 		end_turn.setActionCommand("end");
 		end_turn.addActionListener(this);
 		
+		refund = new JButton("refund pieces");
+		refund.setActionCommand("refund");
+		refund.addActionListener(this);
+		refund.setEnabled(false); // initially cant refund first pieces
+		
+		JPanel padded_refund = new JPanel(new GridLayout(1,0));
+		padded_refund.add(new JLabel());
+		padded_refund.add(refund);
+		
 		rotate = new JButton("rotate board");
 		rotate.setActionCommand("rotate");
 		rotate.addActionListener(this);
@@ -66,11 +85,17 @@ public class GameControlPanel extends JPanel implements ActionListener
 		this.add(current_turn);
 		this.add(roll_dice);
 		this.add(buy);
+		this.add(padded_refund);
 		this.add(trade);
+		this.add(port_trade);
 		this.add(play_dev);
+		
+		this.add(new JLabel()); // padding
+		
 		this.add(end_turn);
 		
-		this.add(new JLabel()); // for padding
+		this.add(new JLabel()); // padding
+		this.add(new JLabel());
 		
 		this.add(rotate);
 	}
@@ -80,6 +105,7 @@ public class GameControlPanel extends JPanel implements ActionListener
 	{
 		roll_dice.setEnabled(true);
 		trade.setEnabled(false);
+		port_trade.setEnabled(false);
 		buy.setEnabled(false);
 		play_dev.setEnabled(false);
 		end_turn.setEnabled(false);
@@ -90,6 +116,7 @@ public class GameControlPanel extends JPanel implements ActionListener
 	{
 		roll_dice.setEnabled(false);
 		trade.setEnabled(false);
+		port_trade.setEnabled(false);
 		buy.setEnabled(false);
 		play_dev.setEnabled(false);
 		end_turn.setEnabled(true);
@@ -100,9 +127,15 @@ public class GameControlPanel extends JPanel implements ActionListener
 	{
 		roll_dice.setEnabled(false);
 		trade.setEnabled(true);
+		port_trade.setEnabled(true);
 		buy.setEnabled(true);
 		play_dev.setEnabled(true);
 		end_turn.setEnabled(true);
+	}
+	
+	public void refund_enabled(boolean b)
+	{
+		refund.setEnabled(b);
 	}
 	
 	// sets the current turn to reflect the name of whoever is now
@@ -123,6 +156,10 @@ public class GameControlPanel extends JPanel implements ActionListener
 		{
 			board_panel.process_trade();
 		}
+		else if (act == "port")
+		{
+			board_panel.process_trade_port();
+		}
 		else if (act == "buy")
 		{
 			board_panel.process_buy();
@@ -134,6 +171,10 @@ public class GameControlPanel extends JPanel implements ActionListener
 		else if (act == "end")
 		{
 			board_panel.process_end_turn();
+		}
+		else if (act == "refund")
+		{
+			board_panel.process_refund();
 		}
 		else if (act == "rotate")
 		{
