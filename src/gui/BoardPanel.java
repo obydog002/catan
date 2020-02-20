@@ -254,13 +254,13 @@ public class BoardPanel extends JPanel
 	public static final BufferedImage MINUS_DECAL = load_resource(DECAL_PATH + "minus_dec.png");
 	
 	// bufferedimages for misc fonts
-	private static final BufferedImage FONT_BLUE_QUESTION = load_resource(FONT_PATH + "blQm.png");
-	private static final BufferedImage FONT_BLACK_COLON = load_resource(FONT_PATH + "bCol.png");
+	public static final BufferedImage FONT_BLUE_QUESTION = load_resource(FONT_PATH + "blQm.png");
+	public static final BufferedImage FONT_BLACK_COLON = load_resource(FONT_PATH + "bCol.png");
 	
 	// bufferedimages for number fonts
 	// first index is value of number (0 - 0, 1 - 1,..., 9 - 9)
 	// second index is color (0 - black, 1 - red)
-	private static final BufferedImage FONT[][] = new BufferedImage[10][2];
+	public static final BufferedImage FONT[][] = new BufferedImage[10][2];
 	
 	// load the fonts
 	static
@@ -383,7 +383,7 @@ public class BoardPanel extends JPanel
 		city_middle = new Point();
 	}
 	
-	// handles initial initialization of panels to hold game info
+	// handles initial initialization of panels to hold game infocd
 	public void init_panels()
 	{
 		this.left = new JPanel(new BorderLayout());
@@ -431,7 +431,7 @@ public class BoardPanel extends JPanel
 	
 	public BoardPanel(GameData game_data, Random rng, JFrame frame)
 	{
-		(new src.gui.engine.BuyDialog(frame, BEIGE, new int[] {4,4,4,4,4})).run();
+		(new src.gui.engine.PortTradeDialog(frame, new boolean[] {false, false, true, false, false, true}, new int[] {4,4,4,4,4})).run();
 		
 		this.game_data = game_data;
 		this.rng = rng;
@@ -718,8 +718,39 @@ public class BoardPanel extends JPanel
 		// engine
 		if (game_data.engine_mode == 0)
 		{
-			src.gui.engine.BuyDialog dialog = new src.gui.engine.BuyDialog(frame, player_col[current_player], new int[] {1,1,1,1,1});
-			dialog.run();
+			src.gui.engine.BuyDialog dialog = new src.gui.engine.BuyDialog(frame, player_col[current_player], new int[] {2,2,1,1,1});
+			int[] res = dialog.run();
+			
+			boolean piece_bought = false;
+			for (int i = 0; i < 3; i++)
+			{
+				if (res[i] > 0)
+				{
+					piece_count[i] += res[i];
+					piece_bought = true;
+				}
+			}
+			
+			if (piece_bought)
+			{
+				game_control_panel.refund_enabled(true);
+			}
+		}
+		else // observer
+		{
+			
+		}
+		
+		repaint();
+	}
+	
+	// handles trade button call
+	public void process_trade()
+	{
+		// engine
+		if (game_data.engine_mode == 0)
+		{
+			
 		}
 		else // observer
 		{
@@ -727,10 +758,17 @@ public class BoardPanel extends JPanel
 		}
 	}
 	
-	// handles trade button call
-	public void process_trade()
+	public void process_trade_port()
 	{
-		
+		// engine
+		if (game_data.engine_mode == 0)
+		{
+			
+		}
+		else // observer
+		{
+			
+		}
 	}
 	
 	// handles playing development cards
@@ -820,6 +858,7 @@ public class BoardPanel extends JPanel
 				if (current_player == game_data.players_amount)
 					current_player = 0;
 				
+				game_control_panel.refund_enabled(false);
 				game_control_panel.set_player_turn(catan.get_agent(current_player).get_name());
 				game_control_panel.roll_dice();
 				game_info_panel.update_info(current_player, " current turn");
@@ -829,6 +868,23 @@ public class BoardPanel extends JPanel
 				JOptionPane.showMessageDialog(this, "Please place all remaining pieces.", "Remaining pieces present", JOptionPane.ERROR_MESSAGE);
 			}
 		}
+	}
+	
+	// if there are pieces to refund it gives back resources to current player
+	// to avoid deadlocking issues that could sometimes arise
+	public void process_refund()
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			if (piece_count[i] > 0)
+			{
+				// refund later to current player
+				piece_count[i] = 0;
+			}
+		}
+		
+		game_control_panel.refund_enabled(false);
+		repaint();
 	}
 	
 	// called when its time to do initial placement of pieces
@@ -1017,6 +1073,13 @@ public class BoardPanel extends JPanel
 		mouse_y = y;
 		
 		Board board = catan.get_board();
+		
+		// if this happens we may have clicked the right mouse button while holding
+		// the left. check we aren't actually holding anything
+		if (item_held != -1)
+		{
+			return;
+		}
 		
 		if (state == 0) // setup phase
 		{
