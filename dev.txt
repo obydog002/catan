@@ -45,6 +45,7 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 			- ports													DONE 29/1/2020
 			- robber												DONE 29/1/2020
 			- test thoroughly										
+			- right click mouse behaviour
 	- draw both board types, scaling, rotate						DONE 19/12/2019
 		- hexes reg													DONE 17/12/2019
 		- hexes ext													DONE 17/12/2019
@@ -85,6 +86,7 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 				- buy building										
 					- basebones implementation						DONE 14/2/2020
 					- check board can place new buildings
+					- refund button workaround						DONE 15/2/2020
 				- trade
 				- play dev card
 	- setup
@@ -132,4 +134,3 @@ next project finish: 27/2/2019 (MARKED 24/1/2020)
 	- random agent
 	- simple agent
 	- ...
-	
