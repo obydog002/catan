@@ -8,6 +8,6 @@ Build settlements and expand to gain victory points! First player to 10 wins!
 ## Plan
 Finish gameplay and GUI
 
-Implement system for custom AIs to play the game, and create some AIs
+AI
 
-Implement observer mode which would allow games to be played over the network
+Play games over the network
